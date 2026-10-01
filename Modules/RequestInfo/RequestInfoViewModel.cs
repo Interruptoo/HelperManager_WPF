@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -34,7 +35,19 @@ public sealed partial class RequestInfoViewModel : ObservableObject
         RefreshFilesCommand = new RelayCommand(RefreshFiles, () => !string.IsNullOrWhiteSpace(SelectedFolderPath));
         CheckAllFieldsCommand = new RelayCommand(() => SetAllFieldFilters(true));
         UncheckAllFieldsCommand = new RelayCommand(() => SetAllFieldFilters(false));
+        CloseCommand = new RelayCommand(() => CloseRequested?.Invoke(this, EventArgs.Empty));
     }
+
+    // ===== 탭(로그 생성 경로가 여러 곳일 때, 탭을 늘려 각각 다른 폴더를 동시에 보기 위한 용도) =====
+
+    /// <summary>탭 헤더에 표시되는 이름. 호스트(RequestInfoHostViewModel)가 탭을 만들 때 부여한다.</summary>
+    [ObservableProperty]
+    private string title = "Tab";
+
+    /// <summary>탭 닫기 버튼을 눌렀을 때 발생. 호스트가 구독해서 자신의 Tabs 목록에서 제거한다.</summary>
+    public event EventHandler? CloseRequested;
+
+    public IRelayCommand CloseCommand { get; }
 
     // ===== 폴더/파일 선택 =====
 
@@ -178,6 +191,12 @@ public sealed partial class RequestInfoViewModel : ObservableObject
         if (dialog.ShowDialog() == true)
         {
             SelectedFolderPath = dialog.FolderName;
+
+            // 로그 생성 경로가 여러 곳이라 탭을 여러 개 띄워 쓰는 상황을 고려해서,
+            // 탭 제목을 "Tab 1" 같은 기본값 대신 실제로 고른 폴더 이름으로 바꿔 구분하기 쉽게 한다.
+            var folderName = Path.GetFileName(SelectedFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            Title = string.IsNullOrEmpty(folderName) ? SelectedFolderPath : folderName;
+
             RefreshFiles();
         }
     }

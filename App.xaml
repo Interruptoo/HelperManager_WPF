@@ -21,6 +21,10 @@
 
                 새로운 화면을 추가할 때는 이 자리에 DataTemplate 한 개만 더 추가하면 됩니다.
             -->
+            <!-- Request LogViewer: 바깥 틀(탭 목록)과 탭 하나하나(실제 로그 조회 화면)를 각각 매핑한다. -->
+            <DataTemplate DataType="{x:Type requestInfo:RequestInfoHostViewModel}">
+                <requestInfo:RequestInfoHostView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type requestInfo:RequestInfoViewModel}">
                 <requestInfo:RequestInfoView />
             </DataTemplate>

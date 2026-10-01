@@ -1,0 +1,44 @@
+<UserControl x:Class="HelperManager.Modules.RequestInfo.RequestInfoHostView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:requestInfo="clr-namespace:HelperManager.Modules.RequestInfo"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1100">
+
+    <DockPanel>
+        <!--
+            로그가 쌓이는 경로가 한 곳이 아니라 여러 곳일 수 있으므로, 탭을 눌러서 필요한 만큼
+            늘릴 수 있게 한다(Tab 1, Tab 2, ...). 탭 하나하나는 폴더 선택부터 상세 보기까지
+            완전히 독립적인 RequestInfoViewModel 인스턴스이다.
+        -->
+        <Button DockPanel.Dock="Top"
+                Content="+ 새 탭"
+                Command="{Binding AddTabCommand}"
+                HorizontalAlignment="Left"
+                Margin="0,0,0,10"
+                ToolTip="새 탭을 추가해서 다른 로그 폴더를 동시에 조회합니다." />
+
+        <!--
+            TabControl.ContentTemplate 을 따로 지정하지 않아도, 선택된 탭(RequestInfoViewModel)의
+            본문은 App.xaml 에 등록된 전역 DataTemplate(RequestInfoViewModel -> RequestInfoView)이
+            자동으로 그려준다. 여기서는 탭 헤더(제목 + 닫기 버튼) 모양만 지정한다.
+        -->
+        <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
+            <TabControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type requestInfo:RequestInfoViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Button Style="{StaticResource CollapseToggleButtonStyle}"
+                                Command="{Binding CloseCommand}"
+                                Width="18" Height="18"
+                                FontSize="10" FontWeight="Normal"
+                                Content="✕"
+                                ToolTip="탭 닫기" />
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+        </TabControl>
+    </DockPanel>
+</UserControl>

@@ -63,8 +63,13 @@ public partial class App : Application
         services.AddSingleton<MainViewModel>();
 
         // ----- 화면(모듈) 등록 영역 -----
-        // RequestInfo: 백엔드 요청/응답 JSON 로그 뷰어 화면
-        services.AddSingleton<RequestInfoViewModel>();
+        // RequestInfo: 백엔드 요청/응답 JSON 로그 뷰어 화면.
+        // 로그 생성 경로가 여러 곳일 수 있어 탭(Tab1, Tab2, ...)으로 여러 개 띄울 수 있으므로,
+        // 탭 하나하나(RequestInfoViewModel)는 탭을 추가할 때마다 새로 만들어야 해서 Transient 로,
+        // 탭 목록을 들고 있는 호스트(RequestInfoHostViewModel)는 메뉴를 옮겨도 탭 구성이 유지되도록
+        // Singleton 으로 등록한다.
+        services.AddTransient<RequestInfoViewModel>();
+        services.AddSingleton<RequestInfoHostViewModel>();
         services.AddSingleton<IFeatureModule, RequestInfoModule>();
 
         // Query Store: XML로 추출된 쿼리 모음을 트리로 보여주는 화면

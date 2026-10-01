@@ -15,5 +15,5 @@ public sealed class RequestInfoModule : IFeatureModule
     public int Order => 10;
 
     public object CreateViewModel(IServiceProvider services) =>
-        services.GetRequiredService<RequestInfoViewModel>();
+        services.GetRequiredService<RequestInfoHostViewModel>();
 }
