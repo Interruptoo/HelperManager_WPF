@@ -1,0 +1,32 @@
+<Application x:Class="HelperManager.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:requestInfo="clr-namespace:HelperManager.Modules.RequestInfo"
+             xmlns:queryStore="clr-namespace:HelperManager.Modules.QueryStore"
+             xmlns:common="clr-namespace:HelperManager.Common">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/AppStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- 패널을 가로로 접었다 펼치는 토글(메뉴 사이드바, Query Store 파라미터 패널 등)에서 공용으로 쓰는 컨버터 -->
+            <common:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter" />
+            <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+            <!--
+                ViewModel-First 네비게이션을 위한 View <-> ViewModel 매핑 영역입니다.
+                MainViewModel.CurrentContent 에 특정 ViewModel 인스턴스가 담기면,
+                ContentControl 이 여기 등록된 DataTemplate 을 찾아 알맞은 View 를 자동으로 그려줍니다.
+
+                새로운 화면을 추가할 때는 이 자리에 DataTemplate 한 개만 더 추가하면 됩니다.
+            -->
+            <DataTemplate DataType="{x:Type requestInfo:RequestInfoViewModel}">
+                <requestInfo:RequestInfoView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type queryStore:QueryStoreViewModel}">
+                <queryStore:QueryStoreView />
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <!-- 향후 화면(모듈)이 늘어날 것을 고려해 최신 C# 문법(C# 14)을 명시적으로 사용한다 -->
+    <LangVersion>latest</LangVersion>
+    <!-- exe 파일 자체의 아이콘(탐색기, 시작 메뉴, 실행 전 작업표시줄 고정 아이콘 등)으로 사용된다. -->
+    <ApplicationIcon>Images\Logo.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- MVVM 보일러플레이트(ObservableObject, RelayCommand 등)를 소스 제너레이터로 자동 생성 -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <!-- 화면(모듈)을 DI 컨테이너에 등록해 느슨하게 결합하기 위함 -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Window.Icon(타이틀바 좌측 상단, 실행 중 작업표시줄 아이콘)에서 사용할 원본 이미지.
+      WPF 리소스로 포함시켜서 실행 파일 위치와 무관하게 pack URI로 항상 로드되게 한다.
+    -->
+    <Resource Include="Images\Logo.png" />
+  </ItemGroup>
+
+</Project>

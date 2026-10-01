@@ -1,0 +1,175 @@
+<UserControl x:Class="HelperManager.Modules.RequestInfo.RequestInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:common="clr-namespace:HelperManager.Common"
+             xmlns:models="clr-namespace:HelperManager.Modules.RequestInfo.Models"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1100">
+
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="32*"/>
+            <ColumnDefinition Width="237*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+             <!--상단: 폴더/파일 선택 툴바--> 
+            <RowDefinition Height="*" />
+             <!--본문: 필드 필터 + 목록 + 상세--> 
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+             <!--하단: 상태 메시지--> 
+        </Grid.RowDefinitions>
+
+        <!-- ===================== 상단 툴바: 폴더 선택 + 생성일 필터 + 파일 선택 ===================== -->
+        <Border Grid.Row="0" Style="{StaticResource ToolbarBorderStyle}" Grid.ColumnSpan="2" >
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- 1행: 폴더 선택 -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Content="폴더 선택..." Command="{Binding SelectFolderCommand}" />
+
+                    <TextBox Grid.Column="1"
+                             Margin="8,0"
+                             IsReadOnly="True"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding SelectedFolderPath, Mode=OneWay}"
+                             ToolTip="현재 로그 파일을 탐색 중인 폴더 경로입니다." />
+
+                    <Button Grid.Column="2" Content="새로고침" Command="{Binding RefreshFilesCommand}" />
+                </Grid>
+
+                <!--
+                    2행: 생성일 필터 + 로그 파일 선택.
+                    로그가 계속 쌓여 콤보박스 항목이 많아져도 원하는 파일을 쉽게 찾을 수 있도록,
+                    파일의 "생성일" 기준으로 기간을 좁혀서 콤보박스에 보여준다.
+                    기본값은 어제(sysdate-1) ~ 오늘(sysdate) 이다.
+                -->
+                <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="생성일 :" VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                    <DatePicker Grid.Column="1"
+                                SelectedDate="{Binding FilterFromDate}"
+                                Width="130" />
+
+                    <TextBlock Grid.Column="2" Text="~" VerticalAlignment="Center" Margin="6,0" />
+
+                    <DatePicker Grid.Column="3"
+                                SelectedDate="{Binding FilterToDate}"
+                                Width="130" />
+
+                    <TextBlock Grid.Column="5" Text="로그 파일 :" VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                    <ComboBox Grid.Column="6"
+                              ItemsSource="{Binding LogFiles}"
+                              SelectedItem="{Binding SelectedLogFile}"
+                              DisplayMemberPath="DisplayText" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ===================== 본문 ===================== -->
+        <Grid Grid.Row="1" Margin="0,10,0,10" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260" MinWidth="200" />
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="*" MinWidth="400" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 좌측: 필드 필터 (body만 골라보기) -->
+            <Border Grid.Column="0" Style="{StaticResource PanelBorderStyle}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="표시할 필드 선택" FontWeight="Bold" Margin="0,0,0,6" />
+
+                    <TextBox DockPanel.Dock="Top"
+                             Margin="0,0,0,6"
+                             Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="목록 검색 (Source, ContextId 등)" />
+
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
+                        <Button Content="전체 선택" Command="{Binding CheckAllFieldsCommand}" Margin="0,0,6,0" />
+                        <Button Content="전체 해제" Command="{Binding UncheckAllFieldsCommand}" />
+                    </StackPanel>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding FieldFilters}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:FieldFilterItem}">
+                                    <CheckBox Content="{Binding FieldName}"
+                                              IsChecked="{Binding IsChecked}"
+                                              Margin="0,3" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent" />
+
+            <!-- 우측: 로그 목록(위) + 상세 내용(아래) -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2*" MinHeight="120" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="3*" MinHeight="150" />
+                </Grid.RowDefinitions>
+
+                <!-- 마스터 목록: 파일 안의 개별 로그 항목(요청/응답) -->
+                <Border Grid.Row="0" Style="{StaticResource PanelBorderStyle}">
+                    <DataGrid ItemsSource="{Binding FilteredEntries}"
+                              SelectedItem="{Binding SelectedEntry}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              SelectionUnit="FullRow">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding LineNumber}" Width="50" />
+                            <DataGridTextColumn Header="시간" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="150" />
+                            <DataGridTextColumn Header="구분" Binding="{Binding Category}" Width="90" />
+                            <DataGridTextColumn Header="요약" Binding="{Binding Summary}" Width="*" />
+                            <DataGridTextColumn Header="상태" Binding="{Binding HttpStatus}" Width="60" />
+                            <DataGridTextColumn Header="ContextId" Binding="{Binding ContextId}" Width="140" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+
+                <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" Background="Transparent" />
+
+                <!-- 상세 내용: 선택된 항목의, 체크된 필드만 가독성 좋게(들여쓰기+색상) 표시 -->
+                <Border Grid.Row="2" Style="{StaticResource PanelBorderStyle}">
+                    <RichTextBox IsReadOnly="True"
+                                 IsDocumentEnabled="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 common:JsonHighlightBehavior.JsonText="{Binding SelectedEntryPrettyJson}" />
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ===================== 하단 상태 메시지 ===================== -->
+        <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" Foreground="Gray" Grid.ColumnSpan="2"/>
+    </Grid>
+</UserControl>
