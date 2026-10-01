@@ -190,15 +190,24 @@ public sealed partial class RequestInfoViewModel : ObservableObject
 
         if (dialog.ShowDialog() == true)
         {
-            SelectedFolderPath = dialog.FolderName;
-
-            // 로그 생성 경로가 여러 곳이라 탭을 여러 개 띄워 쓰는 상황을 고려해서,
-            // 탭 제목을 "Tab 1" 같은 기본값 대신 실제로 고른 폴더 이름으로 바꿔 구분하기 쉽게 한다.
-            var folderName = Path.GetFileName(SelectedFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            Title = string.IsNullOrEmpty(folderName) ? SelectedFolderPath : folderName;
-
-            RefreshFiles();
+            LoadFolder(dialog.FolderName);
         }
+    }
+
+    /// <summary>
+    /// 지정한 폴더를 대화상자 없이 바로 불러온다. Settings 화면에 미리 등록해둔 폴더를
+    /// 앱 시작 시 탭으로 자동으로 열 때 사용한다.
+    /// </summary>
+    public void LoadFolder(string folderPath)
+    {
+        SelectedFolderPath = folderPath;
+
+        // 로그 생성 경로가 여러 곳이라 탭을 여러 개 띄워 쓰는 상황을 고려해서,
+        // 탭 제목을 "Tab 1" 같은 기본값 대신 실제로 고른 폴더 이름으로 바꿔 구분하기 쉽게 한다.
+        var folderName = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        Title = string.IsNullOrEmpty(folderName) ? folderPath : folderName;
+
+        RefreshFiles();
     }
 
     /// <summary>현재 SelectedFolderPath 기준으로 디스크에서 파일 목록을 다시 읽어온 뒤, 날짜 필터를 적용한다.</summary>

@@ -1,0 +1,96 @@
+<UserControl x:Class="HelperManager.Modules.MenuInfo.MenuInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1200">
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- 상단: 파일 열기 + 필터 툴바 -->
+            <RowDefinition Height="*" />    <!-- 본문: DataGrid -->
+            <RowDefinition Height="Auto" /> <!-- 하단: 상태 메시지 -->
+        </Grid.RowDefinitions>
+
+        <!-- ===================== 상단 툴바: 파일 열기 + 필터 ===================== -->
+        <Border Grid.Row="0" Style="{StaticResource ToolbarBorderStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- 1행: 메뉴 정보 JSON 파일 열기 -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Content="파일 열기..." Command="{Binding OpenFileCommand}" />
+
+                    <TextBox Grid.Column="1"
+                             Margin="8,0"
+                             IsReadOnly="True"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding LoadedFilePath, Mode=OneWay}"
+                             ToolTip="현재 불러온 메뉴 정보 JSON 파일 경로입니다." />
+
+                    <Button Grid.Column="2" Content="새로고침" Command="{Binding RefreshCommand}"
+                            ToolTip="정기적으로 갱신되는 파일을 디스크에서 다시 읽어옵니다." />
+                </Grid>
+
+                <!-- 2행: MENU_NM / MENU_CD / APP_URL 필터 (모두 부분 일치, AND 조건) -->
+                <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="MENU_NM :" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBox Grid.Column="1" VerticalContentAlignment="Center"
+                             Text="{Binding FilterMenuName, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Column="3" Text="MENU_CD :" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBox Grid.Column="4" VerticalContentAlignment="Center"
+                             Text="{Binding FilterMenuCode, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Column="6" Text="APP_URL :" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBox Grid.Column="7" VerticalContentAlignment="Center"
+                             Text="{Binding FilterAppUrl, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ===================== 본문: 메뉴 목록 ===================== -->
+        <Border Grid.Row="1" Style="{StaticResource PanelBorderStyle}" Margin="0,10,0,10">
+            <DataGrid ItemsSource="{Binding FilteredEntries}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="USE_YN" Binding="{Binding UseYn}" Width="70" />
+                    <DataGridTextColumn Header="DISP_YN" Binding="{Binding DispYn}" Width="70" />
+                    <DataGridTextColumn Header="MENU_NM" Binding="{Binding MenuNm}" Width="*" MinWidth="150" />
+                    <DataGridTextColumn Header="MENU_CD" Binding="{Binding MenuCd}" Width="130" />
+                    <DataGridTextColumn Header="ASSEMBLY_NM" Binding="{Binding AssemblyNm}" Width="*" MinWidth="180" />
+                    <DataGridTextColumn Header="APP_URL" Binding="{Binding AppUrl}" Width="2*" MinWidth="220" />
+                    <DataGridTextColumn Header="DEPTH1" Binding="{Binding Depth1}" Width="100" />
+                    <DataGridTextColumn Header="DEPTH2" Binding="{Binding Depth2}" Width="100" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- ===================== 하단 상태 메시지 ===================== -->
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="Gray" />
+    </Grid>
+</UserControl>

@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:requestInfo="clr-namespace:HelperManager.Modules.RequestInfo"
              xmlns:queryStore="clr-namespace:HelperManager.Modules.QueryStore"
+             xmlns:menuInfo="clr-namespace:HelperManager.Modules.MenuInfo"
+             xmlns:settings="clr-namespace:HelperManager.Modules.Settings"
              xmlns:common="clr-namespace:HelperManager.Common">
     <Application.Resources>
         <ResourceDictionary>
@@ -30,6 +32,12 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type queryStore:QueryStoreViewModel}">
                 <queryStore:QueryStoreView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type menuInfo:MenuInfoViewModel}">
+                <menuInfo:MenuInfoView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type settings:SettingsViewModel}">
+                <settings:SettingsView />
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

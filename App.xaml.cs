@@ -1,9 +1,13 @@
 using System.Windows;
 using HelperManager.Modules;
+using HelperManager.Modules.MenuInfo;
+using HelperManager.Modules.MenuInfo.Services;
 using HelperManager.Modules.QueryStore;
 using HelperManager.Modules.QueryStore.Services;
 using HelperManager.Modules.RequestInfo;
 using HelperManager.Modules.RequestInfo.Services;
+using HelperManager.Modules.Settings;
+using HelperManager.Settings;
 using HelperManager.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -58,6 +62,8 @@ public partial class App : Application
         // ----- 공통 서비스 -----
         services.AddSingleton<ILogFileParserService, LogFileParserService>();
         services.AddSingleton<IQueryStoreParserService, QueryStoreParserService>();
+        services.AddSingleton<IMenuInfoParserService, MenuInfoParserService>();
+        services.AddSingleton<ISettingsService, SettingsService>();
 
         // ----- 메인 셸(Shell) -----
         services.AddSingleton<MainViewModel>();
@@ -75,5 +81,13 @@ public partial class App : Application
         // Query Store: XML로 추출된 쿼리 모음을 트리로 보여주는 화면
         services.AddSingleton<QueryStoreViewModel>();
         services.AddSingleton<IFeatureModule, QueryStoreModule>();
+
+        // MenuInfo: 정기적으로 추출되는 메뉴 정보 JSON을 DataGrid로 보여주는 화면
+        services.AddSingleton<MenuInfoViewModel>();
+        services.AddSingleton<IFeatureModule, MenuInfoModule>();
+
+        // Settings: 자주 쓰는 로그 폴더/쿼리 XML/메뉴 JSON 경로를 미리 등록해두는 화면
+        services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<IFeatureModule, SettingsModule>();
     }
 }

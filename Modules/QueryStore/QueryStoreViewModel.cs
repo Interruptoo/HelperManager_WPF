@@ -1,9 +1,11 @@
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelperManager.Modules.QueryStore.Models;
 using HelperManager.Modules.QueryStore.Services;
+using HelperManager.Settings;
 using Microsoft.Win32;
 
 namespace HelperManager.Modules.QueryStore;
@@ -36,7 +38,7 @@ public sealed partial class QueryStoreViewModel : ObservableObject
     // 공통으로 쓰이는 값)는 다시 입력하지 않도록 세션 동안만 기억해두는 용도. (파일 저장 없음)
     private readonly Dictionary<string, string> _rememberedParameterValues = new(StringComparer.OrdinalIgnoreCase);
 
-    public QueryStoreViewModel(IQueryStoreParserService parserService)
+    public QueryStoreViewModel(IQueryStoreParserService parserService, ISettingsService settingsService)
     {
         _parserService = parserService;
 
@@ -44,6 +46,14 @@ public sealed partial class QueryStoreViewModel : ObservableObject
         SearchCommand = new RelayCommand(SearchNext, () => !string.IsNullOrWhiteSpace(SearchKeyword) && RootNodes.Count > 0);
         CopyToClipboardCommand = new RelayCommand(CopyToClipboard, () => SelectedNode is { IsLeaf: true, Query: not null });
         FillParametersFromClipboardCommand = new RelayCommand(FillParametersFromClipboard, () => Parameters.Count > 0);
+
+        // Settings 화면에 미리 등록해둔 XML 경로가 있으면, 매번 파일 찾기 대화상자를 열 필요 없이
+        // 앱을 시작할 때 바로 읽어서 트리를 만들어둔다.
+        var savedXmlPath = settingsService.Current.QueryStoreXmlPath;
+        if (!string.IsNullOrWhiteSpace(savedXmlPath) && File.Exists(savedXmlPath))
+        {
+            LoadFile(savedXmlPath);
+        }
     }
 
     /// <summary>현재 불러온 XML 파일 경로.</summary>
@@ -142,14 +152,21 @@ public sealed partial class QueryStoreViewModel : ObservableObject
             Filter = "XML 파일 (*.xml)|*.xml|모든 파일 (*.*)|*.*",
         };
 
-        if (dialog.ShowDialog() != true)
+        if (dialog.ShowDialog() == true)
         {
-            return;
+            LoadFile(dialog.FileName);
         }
+    }
 
-        LoadedFilePath = dialog.FileName;
+    /// <summary>
+    /// 지정한 XML 파일을 대화상자 없이 바로 읽어 트리를 구성한다. Settings 화면에 미리 등록해둔
+    /// 경로를 앱 시작 시 자동으로 불러올 때, 그리고 [파일 열기] 대화상자에서 고른 직후에도 쓰인다.
+    /// </summary>
+    private void LoadFile(string filePath)
+    {
+        LoadedFilePath = filePath;
 
-        var queries = _parserService.ParseFile(dialog.FileName);
+        var queries = _parserService.ParseFile(filePath);
         RootNodes = _parserService.BuildTree(queries);
 
         SelectedNode = null;
