@@ -12,4 +12,7 @@ public sealed record MenuInfoEntry(
     string? AssemblyNm,
     string? AppUrl,
     string? Depth1,
-    string? Depth2);
+    string? Depth2,
+    string? FolderYn
+
+);

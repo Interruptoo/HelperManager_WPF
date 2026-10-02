@@ -35,7 +35,8 @@ public sealed class MenuInfoParserService : IMenuInfoParserService
                 AssemblyNm: GetString(item, "ASSEMBLY_NM"),
                 AppUrl: GetString(item, "APP_URL"),
                 Depth1: GetString(item, "DEPTH1"),
-                Depth2: GetString(item, "DEPTH2")));
+                Depth2: GetString(item, "DEPTH2"),
+                FolderYn: GetString(item, "FOLDER_YN")));
         }
 
         return entries;

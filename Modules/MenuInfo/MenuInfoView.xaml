@@ -42,30 +42,20 @@
                             ToolTip="정기적으로 갱신되는 파일을 디스크에서 다시 읽어옵니다." />
                 </Grid>
 
-                <!-- 2행: MENU_NM / MENU_CD / APP_URL 필터 (모두 부분 일치, AND 조건) -->
+                <!-- 2행: 검색어 하나로 MENU_NM / MENU_CD / APP_URL 세 필드를 동시에 찾는다 (OR 조건) -->
                 <Grid Grid.Row="1" Margin="0,8,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="MENU_NM :" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBlock Grid.Column="0"
+                               Text="검색 (MENU_NM / MENU_CD / APP_URL) :"
+                               VerticalAlignment="Center"
+                               Margin="0,0,6,0" />
                     <TextBox Grid.Column="1" VerticalContentAlignment="Center"
-                             Text="{Binding FilterMenuName, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <TextBlock Grid.Column="3" Text="MENU_CD :" VerticalAlignment="Center" Margin="0,0,6,0" />
-                    <TextBox Grid.Column="4" VerticalContentAlignment="Center"
-                             Text="{Binding FilterMenuCode, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <TextBlock Grid.Column="6" Text="APP_URL :" VerticalAlignment="Center" Margin="0,0,6,0" />
-                    <TextBox Grid.Column="7" VerticalContentAlignment="Center"
-                             Text="{Binding FilterAppUrl, UpdateSourceTrigger=PropertyChanged}" />
+                             Text="{Binding FilterKeyword, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="입력한 값이 MENU_NM, MENU_CD, APP_URL 중 하나라도 포함되어 있으면 보여줍니다." />
                 </Grid>
             </Grid>
         </Border>

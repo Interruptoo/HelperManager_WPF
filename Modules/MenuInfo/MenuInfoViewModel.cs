@@ -15,8 +15,9 @@ namespace HelperManager.Modules.MenuInfo;
 ///  1) [파일 열기] 버튼(또는 Settings에 미리 등록해둔 경로로 시작 시 자동 로드)으로 메뉴 정보
 ///     JSON 파일을 읽으면 -> 필요한 8개 필드(USE_YN/DISP_YN/MENU_NM/MENU_CD/ASSEMBLY_NM/
 ///     APP_URL/DEPTH1/DEPTH2)만 뽑아 DataGrid에 보여준다.
-///  2) 메뉴명/메뉴코드/URL 필터 입력창에 값을 입력하면 -> 모두 부분 일치(AND 조건)하는 행만
-///     걸러서 FilteredEntries 에 담는다.
+///  2) 필터 입력창에 값을 입력하면 -> MENU_NM / MENU_CD / APP_URL 셋 중 하나라도 부분 일치하면
+///     (OR 조건) 그 행을 FilteredEntries 에 담는다. (조건 하나당 검사만 하므로 같은 행이 여러 번
+///     나오는 일 없이 한 줄로만 나온다.)
 /// </summary>
 public sealed partial class MenuInfoViewModel : ObservableObject
 {
@@ -48,17 +49,12 @@ public sealed partial class MenuInfoViewModel : ObservableObject
     [ObservableProperty]
     private IReadOnlyList<MenuInfoEntry> filteredEntries = [];
 
-    /// <summary>메뉴명(MENU_NM) 부분 일치 필터.</summary>
+    /// <summary>
+    /// 검색어 하나로 MENU_NM / MENU_CD / APP_URL 세 필드를 동시에 찾는 필터.
+    /// 세 필드 중 하나라도 부분 일치하면(OR 조건) 그 행을 보여준다.
+    /// </summary>
     [ObservableProperty]
-    private string filterMenuName = string.Empty;
-
-    /// <summary>메뉴코드(MENU_CD) 부분 일치 필터.</summary>
-    [ObservableProperty]
-    private string filterMenuCode = string.Empty;
-
-    /// <summary>URL(APP_URL) 부분 일치 필터.</summary>
-    [ObservableProperty]
-    private string filterAppUrl = string.Empty;
+    private string filterKeyword = string.Empty;
 
     /// <summary>화면 하단 상태 메시지.</summary>
     [ObservableProperty]
@@ -68,11 +64,7 @@ public sealed partial class MenuInfoViewModel : ObservableObject
 
     public IRelayCommand RefreshCommand { get; }
 
-    partial void OnFilterMenuNameChanged(string value) => ApplyFilter();
-
-    partial void OnFilterMenuCodeChanged(string value) => ApplyFilter();
-
-    partial void OnFilterAppUrlChanged(string value) => ApplyFilter();
+    partial void OnFilterKeywordChanged(string value) => ApplyFilter();
 
     /// <summary>Windows 파일 열기 대화상자를 띄워 메뉴 정보 JSON 파일을 고른다.</summary>
     private void OpenFile()
@@ -116,24 +108,22 @@ public sealed partial class MenuInfoViewModel : ObservableObject
         RefreshCommand.NotifyCanExecuteChanged();
     }
 
-    /// <summary>메뉴명/메뉴코드/URL 필터(모두 부분 일치, AND 조건)를 기준으로 AllEntries -> FilteredEntries 를 다시 계산한다.</summary>
+    /// <summary>
+    /// 검색어를 MENU_NM / MENU_CD / APP_URL 세 필드와 각각 비교해서, 하나라도 부분 일치하면
+    /// (OR 조건) 그 행을 포함시킨다. Where 는 행 하나당 한 번만 평가되므로 같은 행이 중복으로
+    /// 나오는 일은 없다 — 매칭된 필드가 몇 개든 그 행은 결과에 한 번만 나온다.
+    /// </summary>
     private void ApplyFilter()
     {
-        IEnumerable<MenuInfoEntry> query = AllEntries;
+        IEnumerable<MenuInfoEntry> query = AllEntries.Where(w=> !string.IsNullOrEmpty(w.FolderYn) && !w.FolderYn.Equals("Y"));
 
-        if (!string.IsNullOrWhiteSpace(FilterMenuName))
+        if (!string.IsNullOrWhiteSpace(FilterKeyword))
         {
-            query = query.Where(entry => Contains(entry.MenuNm, FilterMenuName));
-        }
-
-        if (!string.IsNullOrWhiteSpace(FilterMenuCode))
-        {
-            query = query.Where(entry => Contains(entry.MenuCd, FilterMenuCode));
-        }
-
-        if (!string.IsNullOrWhiteSpace(FilterAppUrl))
-        {
-            query = query.Where(entry => Contains(entry.AppUrl, FilterAppUrl));
+            var keyword = FilterKeyword.Trim();
+            query = query.Where(entry =>
+                Contains(entry.MenuNm, keyword) ||
+                Contains(entry.MenuCd, keyword) ||
+                Contains(entry.AppUrl, keyword));
         }
 
         FilteredEntries = query.ToList();
