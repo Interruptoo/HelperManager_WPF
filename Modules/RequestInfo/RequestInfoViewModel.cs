@@ -188,6 +188,8 @@ public sealed partial class RequestInfoViewModel : ObservableObject
             Title = "로그 파일이 있는 폴더를 선택하세요",
         };
 
+        dialog.InitialDirectory = SelectedFolderPath;
+
         if (dialog.ShowDialog() == true)
         {
             LoadFolder(dialog.FolderName);

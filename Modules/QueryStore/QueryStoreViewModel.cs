@@ -121,6 +121,7 @@ public sealed partial class QueryStoreViewModel : ObservableObject
         {
             Title = "쿼리 모음 XML 파일을 선택하세요",
             Filter = "XML 파일 (*.xml)|*.xml|모든 파일 (*.*)|*.*",
+            InitialDirectory = LoadedFilePath,
         };
 
         if (dialog.ShowDialog() == true)

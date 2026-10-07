@@ -1,10 +1,12 @@
-using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelperManager.Modules.MenuInfo.Models;
 using HelperManager.Modules.MenuInfo.Services;
 using HelperManager.Settings;
 using Microsoft.Win32;
+using System.Diagnostics;
+using System.IO;
+using System.Windows;
 
 namespace HelperManager.Modules.MenuInfo;
 
@@ -73,7 +75,10 @@ public sealed partial class MenuInfoViewModel : ObservableObject
         {
             Title = "메뉴 정보 JSON 파일을 선택하세요",
             Filter = "JSON 파일 (*.json)|*.json|모든 파일 (*.*)|*.*",
+            InitialDirectory = LoadedFilePath,
         };
+
+        
 
         if (dialog.ShowDialog() == true)
         {
