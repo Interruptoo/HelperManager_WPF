@@ -17,4 +17,10 @@ public sealed class AppSettings
 
     /// <summary>프로그램을 시작할 때 MenuInfo 화면이 자동으로 읽어올 메뉴 정보 JSON 파일 경로.</summary>
     public string? MenuInfoJsonPath { get; set; }
+
+    /// <summary>프로그램을 시작할 때 Common Code 화면이 자동으로 읽어올 ComnCdInfo.json 파일 경로.</summary>
+    public string? ComnCdInfoPath { get; set; }
+
+    /// <summary>프로그램을 시작할 때 Common Code 화면이 자동으로 읽어올 ComnCdDetail.json 파일 경로.</summary>
+    public string? ComnCdDetailPath { get; set; }
 }

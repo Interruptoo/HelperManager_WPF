@@ -12,6 +12,7 @@
             <RowDefinition Height="Auto" /> <!-- Request LogViewer 자동 로드 폴더 -->
             <RowDefinition Height="Auto" /> <!-- Query Store 자동 로드 XML -->
             <RowDefinition Height="Auto" /> <!-- MenuInfo 자동 로드 JSON -->
+            <RowDefinition Height="Auto" /> <!-- Common Code 자동 로드 JSON(2개) -->
             <RowDefinition Height="*" />    <!-- 여백 -->
             <RowDefinition Height="Auto" /> <!-- 저장 버튼 + 상태 메시지 -->
         </Grid.RowDefinitions>
@@ -81,7 +82,7 @@
         </Border>
 
         <!-- MenuInfo: 시작 시 자동으로 불러올 메뉴 정보 JSON 파일 하나 -->
-        <Border Grid.Row="3" Style="{StaticResource PanelBorderStyle}">
+        <Border Grid.Row="3" Style="{StaticResource PanelBorderStyle}" Margin="0,0,0,16">
             <StackPanel>
                 <TextBlock Text="Menu Info - 시작 시 자동으로 불러올 메뉴 정보 JSON" FontWeight="Bold" Margin="0,0,0,8" />
 
@@ -103,8 +104,53 @@
             </StackPanel>
         </Border>
 
+        <!-- Common Code: 시작 시 자동으로 불러올 ComnCdInfo.json / ComnCdDetail.json -->
+        <Border Grid.Row="4" Style="{StaticResource PanelBorderStyle}">
+            <StackPanel>
+                <TextBlock Text="Common Code - 시작 시 자동으로 불러올 공통코드 JSON" FontWeight="Bold" Margin="0,0,0,8" />
+
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="ComnCdInfo :" VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                    <TextBox Grid.Column="1"
+                             IsReadOnly="True"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding ComnCdInfoPath, Mode=OneWay}" />
+
+                    <Button Grid.Column="2" Content="파일 선택..." Command="{Binding BrowseComnCdInfoCommand}" Margin="8,0,0,0" />
+                    <Button Grid.Column="3" Content="지우기" Command="{Binding ClearComnCdInfoCommand}" Margin="8,0,0,0" />
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="ComnCdDetail :" VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                    <TextBox Grid.Column="1"
+                             IsReadOnly="True"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding ComnCdDetailPath, Mode=OneWay}" />
+
+                    <Button Grid.Column="2" Content="파일 선택..." Command="{Binding BrowseComnCdDetailCommand}" Margin="8,0,0,0" />
+                    <Button Grid.Column="3" Content="지우기" Command="{Binding ClearComnCdDetailCommand}" Margin="8,0,0,0" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
         <!-- 저장 -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,16,0,0">
+        <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,16,0,0">
             <Button Content="저장" Command="{Binding SaveCommand}" />
             <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" VerticalAlignment="Center" Margin="12,0,0,0" />
         </StackPanel>

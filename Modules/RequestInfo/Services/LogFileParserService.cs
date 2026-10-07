@@ -153,9 +153,11 @@ public sealed partial class LogFileParserService : ILogFileParserService
 
     private static LogEntry BuildJsonEntry(int lineNumber, string rawLine, JsonObject root)
     {
+        // CreateAt 은 "...Z"(UTC)로 찍혀 있다. ToLocalTime() 없이 그대로 포맷하면 오프셋이 0으로
+        // 유지된 채(UTC 그대로의 시:분:초) 표시되어, 한국 시간보다 9시간 느리게 보이는 문제가 있었다.
         var createdAtText = TryGetString(root, "CreateAt");
         DateTimeOffset? createdAt = createdAtText is not null && DateTimeOffset.TryParse(createdAtText, out var parsedDate)
-            ? parsedDate
+            ? parsedDate.ToLocalTime()
             : null;
 
         return new LogEntry

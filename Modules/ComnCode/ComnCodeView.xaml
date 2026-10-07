@@ -1,0 +1,149 @@
+<UserControl x:Class="HelperManager.Modules.ComnCode.ComnCodeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1300">
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- 상단: 파일 열기 + 검색 툴바 -->
+            <RowDefinition Height="*" />    <!-- 본문: Info(좌) + Detail(우) -->
+            <RowDefinition Height="Auto" /> <!-- 하단: 상태 메시지 -->
+        </Grid.RowDefinitions>
+
+        <!-- ===================== 상단 툴바: 파일 열기(2개) + 검색 ===================== -->
+        <Border Grid.Row="0" Style="{StaticResource ToolbarBorderStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- 1행: ComnCdInfo.json -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="ComnCdInfo :" VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                    <TextBox Grid.Column="1"
+                             Margin="0,0,8,0"
+                             IsReadOnly="True"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding InfoFilePath, Mode=OneWay}"
+                             ToolTip="현재 불러온 ComnCdInfo.json 파일 경로입니다." />
+
+                    <Button Grid.Column="2" Content="파일 열기..." Command="{Binding OpenInfoFileCommand}" />
+                </Grid>
+
+                <!-- 2행: ComnCdDetail.json + 새로고침 -->
+                <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="ComnCdDetail :" VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                    <TextBox Grid.Column="1"
+                             Margin="0,0,8,0"
+                             IsReadOnly="True"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding DetailFilePath, Mode=OneWay}"
+                             ToolTip="현재 불러온 ComnCdDetail.json 파일 경로입니다." />
+
+                    <Button Grid.Column="2" Content="파일 열기..." Command="{Binding OpenDetailFileCommand}" Margin="0,0,8,0" />
+
+                    <Button Grid.Column="3" Content="새로고침" Command="{Binding RefreshCommand}"
+                            ToolTip="정기적으로 갱신되는 두 파일을 디스크에서 다시 읽어옵니다." />
+                </Grid>
+
+                <!-- 3행: 검색 (Info 목록의 어느 필드든 부분 일치하면 보여준다) -->
+                <Grid Grid.Row="2" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="검색 :" VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                    <TextBox Grid.Column="1" VerticalContentAlignment="Center"
+                             Text="{Binding FilterKeyword, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="입력한 값이 왼쪽 목록의 어느 필드에든 포함되어 있으면 보여줍니다." />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ===================== 본문: ComnCdInfo 목록(좌) + 선택한 그룹의 Detail(우) ===================== -->
+        <Grid Grid.Row="1" Margin="0,10,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="300" />
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="2*" MinWidth="400" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 좌측: ComnCdInfo 목록. 실제 파일에서 확인된 5개 필드를 고정 컬럼으로 보여준다. -->
+            <Border Grid.Column="0" Style="{StaticResource PanelBorderStyle}">
+                <DataGrid ItemsSource="{Binding FilteredInfoRecords}"
+                          SelectedItem="{Binding SelectedInfoRecord}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          SelectionUnit="FullRow"
+                          HorizontalScrollBarVisibility="Auto"
+                          >
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="TABLE_NAME" Binding="{Binding TableName}" Width="100" Visibility="Collapsed"/>
+                        <DataGridTextColumn Header="COMN_GRP_CD" Binding="{Binding ComnGrpCd}" Width="120" />
+                        <DataGridTextColumn Header="COMN_GRP_CD_NM" Binding="{Binding ComnGrpCdNm}" Width="*" MinWidth="150" />
+                        <DataGridTextColumn Header="COMN_GRP_CD_EXPL" Binding="{Binding ComnGrpCdExpl}" Width="2*" MinWidth="200" />
+                        <DataGridTextColumn Header="HSP_TP_CD" Binding="{Binding HspTpCd}" Width="90" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent" />
+
+            <!-- 우측: 왼쪽에서 선택한 공통코드 그룹의 상세 값(Detail). 실제 파일에서 확인된 17개 필드를 고정 컬럼으로 보여준다. -->
+            <Border Grid.Column="2" Style="{StaticResource PanelBorderStyle}">
+                <DataGrid ItemsSource="{Binding DetailRecords}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Extended"
+                          SelectionUnit="FullRow"
+                          >
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="TABLE_NAME" Binding="{Binding TableName}" Width="90" Visibility="Visible"/>
+                        <DataGridTextColumn Header="HSP_TP_CD" Binding="{Binding HspTpCd}" Width="90" Visibility="Collapsed"/>
+                        <DataGridTextColumn Header="COMN_GRP_CD" Binding="{Binding ComnGrpCd}" Width="110" Visibility="Collapsed"/>
+                        <DataGridTextColumn Header="COMN_CD" Binding="{Binding ComnCd}" Width="80" />
+                        <DataGridTextColumn Header="COMN_CD_NM" Binding="{Binding ComnCdNm}" Width="150" />
+                        <DataGridTextColumn Header="COMN_CD_EXPL" Binding="{Binding ComnCdExpl}" Width="*" MinWidth="180" />
+                        <DataGridTextColumn Header="SCRN_MRK_SEQ" Binding="{Binding ScrnMrkSeq}" Width="90" />
+                        <DataGridTextColumn Header="USE_YN" Binding="{Binding UseYn}" Width="70" />
+                        <DataGridTextColumn Header="DTRL1_NM" Binding="{Binding Dtrl1Nm}" Width="100" />
+                        <DataGridTextColumn Header="DTRL2_NM" Binding="{Binding Dtrl2Nm}" Width="100" />
+                        <DataGridTextColumn Header="DTRL3_NM" Binding="{Binding Dtrl3Nm}" Width="100" />
+                        <DataGridTextColumn Header="DTRL4_NM" Binding="{Binding Dtrl4Nm}" Width="100" />
+                        <DataGridTextColumn Header="DTRL5_NM" Binding="{Binding Dtrl5Nm}" Width="100" />
+                        <DataGridTextColumn Header="DTRL6_NM" Binding="{Binding Dtrl6Nm}" Width="100" />
+                        <DataGridTextColumn Header="DTRL7_NM" Binding="{Binding Dtrl7Nm}" Width="100" />
+                        <DataGridTextColumn Header="DTRL8_NM" Binding="{Binding Dtrl8Nm}" Width="100" />
+                        <DataGridTextColumn Header="NEXTG_FMR_COMN_CD" Binding="{Binding NextgFmrComnCd}" Width="140" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <!-- ===================== 하단 상태 메시지 ===================== -->
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="Gray" />
+    </Grid>
+</UserControl>

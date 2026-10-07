@@ -48,7 +48,8 @@ public sealed partial class MainViewModel : ObservableObject
         ToggleMenuCommand = new RelayCommand(() => IsMenuExpanded = !IsMenuExpanded);
 
         // Order 값 오름차순으로 정렬해서 메뉴 표시 순서를 결정한다.
-        Modules = modules.OrderBy(module => module.Order).ToList();
+        //Modules = modules.OrderBy(module => module.Order).ToList();
+        Modules = modules.ToList();
 
         // 앱 시작 시 첫 번째 메뉴를 기본으로 선택한다.
         SelectedModule = Modules.FirstOrDefault();

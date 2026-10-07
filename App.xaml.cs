@@ -1,5 +1,7 @@
 using System.Windows;
 using HelperManager.Modules;
+using HelperManager.Modules.ComnCode;
+using HelperManager.Modules.ComnCode.Services;
 using HelperManager.Modules.MenuInfo;
 using HelperManager.Modules.MenuInfo.Services;
 using HelperManager.Modules.QueryStore;
@@ -62,6 +64,7 @@ public partial class App : Application
         // ----- 공통 서비스 -----
         services.AddSingleton<ILogFileParserService, LogFileParserService>();
         services.AddSingleton<IQueryStoreParserService, QueryStoreParserService>();
+        services.AddSingleton<IComnCodeParserService, ComnCodeParserService>();
         services.AddSingleton<IMenuInfoParserService, MenuInfoParserService>();
         services.AddSingleton<ISettingsService, SettingsService>();
 
@@ -85,11 +88,15 @@ public partial class App : Application
         services.AddSingleton<QueryStoreViewModel>();
         services.AddSingleton<IFeatureModule, QueryStoreModule>();
 
+        // Common Code: ComnCdInfo.json(좌) + ComnCdDetail.json(우, 선택한 그룹만 필터링)을 보여주는 화면
+        services.AddSingleton<ComnCodeViewModel>();
+        services.AddSingleton<IFeatureModule, ComnCodeModule>();
+
         // MenuInfo: 정기적으로 추출되는 메뉴 정보 JSON을 DataGrid로 보여주는 화면
         services.AddSingleton<MenuInfoViewModel>();
         services.AddSingleton<IFeatureModule, MenuInfoModule>();
 
-        // Settings: 자주 쓰는 로그 폴더/쿼리 XML/메뉴 JSON 경로를 미리 등록해두는 화면
+        // Settings: 자주 쓰는 로그 폴더/쿼리 XML/메뉴·공통코드 JSON 경로를 미리 등록해두는 화면
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<IFeatureModule, SettingsModule>();
     }
