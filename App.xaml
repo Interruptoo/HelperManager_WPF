@@ -30,6 +30,11 @@
             <DataTemplate DataType="{x:Type requestInfo:RequestInfoViewModel}">
                 <requestInfo:RequestInfoView />
             </DataTemplate>
+            <!--
+                Query Store: 화면 전체는 QueryStoreViewModel 하나(트리/검색 공용)로 매핑하고,
+                그 안에서 열리는 쿼리 탭(QueryTabViewModel)의 본문은 QueryStoreView.xaml 안에
+                TabControl.ContentTemplate 으로 직접 정의되어 있어 여기 등록할 필요가 없다.
+            -->
             <DataTemplate DataType="{x:Type queryStore:QueryStoreViewModel}">
                 <queryStore:QueryStoreView />
             </DataTemplate>

@@ -5,13 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:common="clr-namespace:HelperManager.Common"
              xmlns:models="clr-namespace:HelperManager.Modules.QueryStore.Models"
+             xmlns:local="clr-namespace:HelperManager.Modules.QueryStore"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1100">
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /> <!-- 상단: 파일 열기 + 검색 툴바 -->
-            <RowDefinition Height="*" />    <!-- 본문: 트리 + 상세 내용 -->
+            <RowDefinition Height="*" />    <!-- 본문: 트리(공용) + 열려 있는 쿼리 탭들 -->
             <RowDefinition Height="Auto" /> <!-- 하단: 상태 메시지 -->
         </Grid.RowDefinitions>
 
@@ -92,12 +93,13 @@
                 <ColumnDefinition Width="*" MinWidth="400" />
             </Grid.ColumnDefinitions>
 
-            <!-- 좌측: 쿼리 id 트리 -->
+            <!-- 좌측: 쿼리 id 트리 (탭과 달리 화면 전체에서 공용으로 하나만 사용한다) -->
             <Border Grid.Column="0" Style="{StaticResource PanelBorderStyle}">
                 <TreeView x:Name="QueryTree"
                           ItemsSource="{Binding RootNodes}"
                           BorderThickness="0"
-                          SelectedItemChanged="QueryTree_OnSelectedItemChanged">
+                          SelectedItemChanged="QueryTree_OnSelectedItemChanged"
+                          MouseDoubleClick="QueryTree_OnMouseDoubleClick">
                     <TreeView.Resources>
                         <HierarchicalDataTemplate DataType="{x:Type models:QueryTreeNode}" ItemsSource="{Binding Children}">
                             <StackPanel Orientation="Horizontal">
@@ -129,99 +131,121 @@
 
             <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent" />
 
-            <!-- 우측: 선택된 쿼리의 원본 텍스트(좌) + 파라미터/미리보기(우). GridSplitter로 폭을 직접 조절한다. -->
-            <Grid Grid.Column="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="380" />
-                    <ColumnDefinition Width="6" />
-                    <ColumnDefinition Width="320" MinWidth="240" />
-                </Grid.ColumnDefinitions>
+            <!--
+                우측: 열려 있는 쿼리 탭들. 트리에서 쿼리를 더블클릭(또는 검색)할 때마다 탭이 하나씩
+                열리고, 탭 하나하나가 QUERY TEXT + PARAMETERS + 미리보기를 전부 포함한다.
+                TabControl.ContentTemplate 하나로 모든 탭의 본문 모양을 정의한다.
+            -->
+            <TabControl Grid.Column="2" ItemsSource="{Binding OpenTabs}" SelectedItem="{Binding SelectedTab}">
+                <TabControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:QueryTabViewModel}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource CollapseToggleButtonStyle}"
+                                    Command="{Binding CloseCommand}"
+                                    Width="18" Height="18"
+                                    FontSize="10" FontWeight="Normal"
+                                    Content="✕"
+                                    ToolTip="탭 닫기" />
+                        </StackPanel>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
 
-                <!-- QUERY TEXT: 선택된 쿼리의 원본 텍스트(색상 강조). 파라미터 패널을 접으면 이 영역이 넓어진다. -->
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                <TabControl.ContentTemplate>
+                    <DataTemplate DataType="{x:Type local:QueryTabViewModel}">
+                        <Grid Margin="10,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" MinWidth="380" />
+                                <ColumnDefinition Width="6" />
+                                <ColumnDefinition Width="320" MinWidth="240" />
+                            </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Row="0"
-                               Text="{Binding SelectedNode.Query.Id, FallbackValue='쿼리를 선택해주세요.', TargetNullValue='쿼리를 선택해주세요.'}"
-                               FontWeight="Bold"
-                               Margin="0,0,0,8" />
+                            <!-- QUERY TEXT: 이 탭이 보여주는 쿼리의 원본 텍스트(색상 강조) -->
+                            <Grid Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
 
-                    <Border Grid.Row="1" Style="{StaticResource PanelBorderStyle}">
-                        <RichTextBox IsReadOnly="True"
-                                     IsDocumentEnabled="True"
-                                     VerticalScrollBarVisibility="Auto"
-                                     HorizontalScrollBarVisibility="Auto"
-                                     common:SqlHighlightBehavior.SqlText="{Binding DetailText}" />
-                    </Border>
-                </Grid>
+                                <TextBlock Grid.Row="0" Text="{Binding Query.Id}" FontWeight="Bold" Margin="0,0,0,8" />
 
-                <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent" />
+                                <Border Grid.Row="1" Style="{StaticResource PanelBorderStyle}">
+                                    <RichTextBox IsReadOnly="True"
+                                                 IsDocumentEnabled="True"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 common:SqlHighlightBehavior.SqlText="{Binding DetailText}" />
+                                </Border>
+                            </Grid>
 
-                <!--
-                    PARAMETERS / 미리보기: DB 연결 없이, 쿼리 본문의 :NAME 바인드 변수에 값을 입력받아
-                    치환이 끝난 순수 SQL을 클립보드로 복사해서 DBMS 도구에 붙여넣어 실행하기 위한 영역.
-                -->
-                <Grid Grid.Column="2">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" MinHeight="100" />
-                    </Grid.RowDefinitions>
+                            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent" />
 
-                    <Grid Grid.Row="0" Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                            <!--
+                                PARAMETERS / 미리보기: DB 연결 없이, 쿼리 본문의 :NAME 바인드 변수에 값을
+                                입력받아 치환이 끝난 순수 SQL을 클립보드로 복사해서 DBMS 도구에 붙여넣어
+                                실행하기 위한 영역.
+                            -->
+                            <Grid Grid.Column="2">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" MinHeight="100" />
+                                </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="PARAMETERS" FontWeight="Bold" VerticalAlignment="Center" />
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                        <Button Grid.Column="1"
-                                Content="클립보드에서 채우기"
-                                Command="{Binding FillParametersFromClipboardCommand}"
-                                ToolTip="요청 로그 뷰어(RequestInfo)에서 복사한 RequestContent/ResponseContent 내용을 붙여넣어, 이름이 같은 파라미터에 값을 자동으로 채웁니다." />
-                    </Grid>
+                                    <TextBlock Grid.Column="0" Text="PARAMETERS" FontWeight="Bold" VerticalAlignment="Center" />
 
-                    <Border Grid.Row="1" Style="{StaticResource PanelBorderStyle}">
-                        <DataGrid ItemsSource="{Binding Parameters}"
-                                  AutoGenerateColumns="False"
-                                  CanUserAddRows="False"
-                                  SelectionUnit="FullRow"
-                                  Height="220">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="파라미터명" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
-                                <DataGridTextColumn Header="값" Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-                                <DataGridComboBoxColumn Header="타입"
-                                                         ItemsSource="{x:Static models:QueryParameterItem.AllValueTypes}"
-                                                         SelectedItemBinding="{Binding ValueType}"
-                                                         Width="72" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
+                                    <Button Grid.Column="1"
+                                            Content="클립보드에서 채우기"
+                                            Command="{Binding FillParametersFromClipboardCommand}"
+                                            ToolTip="요청 로그 뷰어(RequestInfo)에서 복사한 RequestContent/ResponseContent 내용을 붙여넣어, 이름이 같은 파라미터에 값을 자동으로 채웁니다." />
+                                </Grid>
 
-                    <Button Grid.Row="2"
-                            Content="클립보드 복사"
-                            Command="{Binding CopyToClipboardCommand}"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Stretch"
-                            ToolTip="XML 태그/주석과 iBatis 조건 태그를 처리하고, 입력한 값으로 바인드 변수를 치환한 SQL을 클립보드에 복사합니다." />
+                                <Border Grid.Row="1" Style="{StaticResource PanelBorderStyle}">
+                                    <DataGrid ItemsSource="{Binding Parameters}"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              SelectionUnit="FullRow"
+                                              Height="220">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="파라미터명" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
+                                            <DataGridTextColumn Header="값" Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                            <DataGridComboBoxColumn Header="타입"
+                                                                     ItemsSource="{x:Static models:QueryParameterItem.AllValueTypes}"
+                                                                     SelectedItemBinding="{Binding ValueType}"
+                                                                     Width="72" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Border>
 
-                    <TextBlock Grid.Row="3" Text="복사 결과 미리보기" FontWeight="Bold" Margin="0,12,0,8" />
+                                <Button Grid.Row="2"
+                                        Content="클립보드 복사"
+                                        Command="{Binding CopyToClipboardCommand}"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Stretch"
+                                        ToolTip="XML 태그/주석과 iBatis 조건 태그를 처리하고, 입력한 값으로 바인드 변수를 치환한 SQL을 클립보드에 복사합니다." />
 
-                    <Border Grid.Row="4" Style="{StaticResource PanelBorderStyle}">
-                        <RichTextBox IsReadOnly="True"
-                                     IsDocumentEnabled="True"
-                                     VerticalScrollBarVisibility="Auto"
-                                     HorizontalScrollBarVisibility="Auto"
-                                     common:SqlHighlightBehavior.SqlText="{Binding ClipboardPreviewText}" />
-                    </Border>
-                </Grid>
-            </Grid>
+                                <TextBlock Grid.Row="3" Text="복사 결과 미리보기" FontWeight="Bold" Margin="0,12,0,8" />
+
+                                <Border Grid.Row="4" Style="{StaticResource PanelBorderStyle}">
+                                    <RichTextBox IsReadOnly="True"
+                                                 IsDocumentEnabled="True"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 common:SqlHighlightBehavior.SqlText="{Binding ClipboardPreviewText}" />
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
         </Grid>
 
         <!-- ===================== 하단 상태 메시지 ===================== -->

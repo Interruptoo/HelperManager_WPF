@@ -78,7 +78,10 @@ public partial class App : Application
         services.AddSingleton<RequestInfoHostViewModel>();
         services.AddSingleton<IFeatureModule, RequestInfoModule>();
 
-        // Query Store: XML로 추출된 쿼리 모음을 트리로 보여주는 화면
+        // Query Store: XML로 추출된 쿼리 모음을 트리로 보여주는 화면.
+        // 트리/검색/파일 열기는 화면 전체에서 공용으로 하나만 쓰므로 QueryStoreViewModel 은
+        // Singleton 으로 등록한다. (쿼리별 탭은 QueryTabViewModel 로, DI 등록 없이 QueryStoreViewModel
+        // 이 쿼리를 열 때마다 직접 new 로 만든다 — 탭마다 다른 쿼리를 다루므로 DI로 캐시할 이유가 없다)
         services.AddSingleton<QueryStoreViewModel>();
         services.AddSingleton<IFeatureModule, QueryStoreModule>();
 
