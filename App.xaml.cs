@@ -69,6 +69,9 @@ public partial class App : Application
         services.AddSingleton<IQueryStoreParserService, QueryStoreParserService>();
         services.AddSingleton<ITableInfoParserService, TableInfoParserService>();
         services.AddSingleton<IComnCodeParserService, ComnCodeParserService>();
+        // 공통코드 파일(특히 16만 건 / 약 500MB 인 ComnCdDetail)을 한 벌만 읽어
+        // Common Code 화면과 Table Info 화면이 나눠 쓰도록 하는 보관소.
+        services.AddSingleton<IComnCodeDataProvider, ComnCodeDataProvider>();
         services.AddSingleton<IMenuInfoParserService, MenuInfoParserService>();
         services.AddSingleton<ISettingsService, SettingsService>();
         // 추출이 끝났을 때 각 화면이 JSON 을 다시 읽도록 알려주는 통로.

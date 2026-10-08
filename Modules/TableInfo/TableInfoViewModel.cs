@@ -2,6 +2,8 @@ using HelperManager.Common;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HelperManager.Modules.ComnCode.Models;
+using HelperManager.Modules.ComnCode.Services;
 using HelperManager.Modules.TableInfo.Models;
 using HelperManager.Modules.TableInfo.Services;
 using HelperManager.Settings;
@@ -46,9 +48,18 @@ public sealed partial class TableInfoViewModel : ObservableObject
     /// </summary>
     private bool _objectsHaveOwner;
 
-    public TableInfoViewModel(ITableInfoParserService parserService, ISettingsService settingsService, IJsonDataRefreshNotifier refreshNotifier)
+    // 공통코드 파일은 Common Code 화면과 한 벌을 나눠 쓴다. (ComnCdDetail 은 16만 건 / 약 500MB 라
+    // 화면마다 따로 읽으면 메모리가 두 배가 된다)
+    private readonly IComnCodeDataProvider _comnCodeDataProvider;
+
+    public TableInfoViewModel(
+        ITableInfoParserService parserService,
+        IComnCodeDataProvider comnCodeDataProvider,
+        ISettingsService settingsService,
+        IJsonDataRefreshNotifier refreshNotifier)
     {
         _parserService = parserService;
+        _comnCodeDataProvider = comnCodeDataProvider;
 
         OpenTableInfoFileCommand = new RelayCommand(() => OpenFile("TableInfo", path => TableInfoFilePath = path));
         OpenColumnInfoFileCommand = new RelayCommand(() => OpenFile("ColumnInfo", path => ColumnInfoFilePath = path));
@@ -107,6 +118,21 @@ public sealed partial class TableInfoViewModel : ObservableObject
     [ObservableProperty]
     private IReadOnlyList<TableObjectEntry> objects = [];
 
+    /// <summary>컬럼 목록에서 선택된 컬럼. 이 컬럼의 COMMENTS 로 공통코드 그룹을 찾는다.</summary>
+    [ObservableProperty]
+    private ColumnInfoEntry? selectedColumn;
+
+    /// <summary>선택한 컬럼의 주석으로 찾은 공통코드 그룹에 묶여 있는 상세 코드 목록.</summary>
+    [ObservableProperty]
+    private IReadOnlyList<ComnCodeRecord> matchedComnCodes = [];
+
+    /// <summary>
+    /// 공통코드 패널에 덧붙여 보여줄 안내. 무엇으로 찾았는지(정확히 일치 / 부분 일치),
+    /// 또는 왜 비어 있는지를 알려준다.
+    /// </summary>
+    [ObservableProperty]
+    private string comnCodeHint = "컬럼을 선택하면 그 주석과 이름이 같은 공통코드 그룹을 찾아 보여줍니다.";
+
     /// <summary>
     /// 사용 오브젝트 파일에 "어떤 테이블을 참조하는지"가 들어있지 않아 테이블별로 걸러낼 수 없을 때
     /// true. 이때는 목록 대신 추출 쿼리를 어떻게 고치면 되는지 안내 문구를 보여준다.
@@ -135,6 +161,8 @@ public sealed partial class TableInfoViewModel : ObservableObject
     partial void OnFilterKeywordChanged(string value) => ApplyFilter();
 
     partial void OnSelectedTableChanged(TableInfoEntry? value) => UpdateDetails();
+
+    partial void OnSelectedColumnChanged(ColumnInfoEntry? value) => UpdateComnCodes();
 
     /// <summary>네 경로 중 하나라도 지정되어 있으면 불러올 것이 있다고 본다.</summary>
     private bool CanRefresh() =>
@@ -244,6 +272,66 @@ public sealed partial class TableInfoViewModel : ObservableObject
         Columns = _columnsByTable[key].ToList();
         Indexes = _indexesByTable[_indexesHaveOwner ? key : selected.TableOnlyKey].ToList();
         Objects = _objectsByTable[_objectsHaveOwner ? key : selected.TableOnlyKey].ToList();
+
+        // 다른 테이블로 옮기면 이전 컬럼 선택은 더 이상 유효하지 않다.
+        SelectedColumn = null;
+    }
+
+    /// <summary>
+    /// 선택한 컬럼의 COMMENTS(예: "병원구분코드")로 공통코드를 찾아 보여준다.
+    ///
+    /// 두 단계로 찾는다:
+    ///   1) ComnCdInfo 에서 COMN_GRP_CD_NM 이 컬럼 주석과 "정확히 일치"하는 그룹을 찾아 COMN_GRP_CD 를 얻고
+    ///   2) ComnCdDetail 에서 그 그룹에 묶여 있는 상세 코드(COMN_CD ...)를 모아서 보여준다.
+    ///
+    /// 같은 이름의 그룹이 기본(CCCCCSTE)과 병원별(CCCMCSTE) 양쪽에 있을 수 있어 그룹이 여러 개
+    /// 나올 수 있고, 그때는 각 그룹의 상세 코드를 모두 합쳐서 보여준다.
+    /// 그룹에서 상세로 내려가는 조인 규칙은 Common Code 화면과 같은 것을 쓴다
+    /// (<see cref="ComnCodeGroupMatch"/> — HSP_TP_CD 를 느슨하게 비교해야 하는 사정이 있다).
+    /// </summary>
+    private void UpdateComnCodes()
+    {
+        if (SelectedColumn?.Comments is not { } comment || string.IsNullOrWhiteSpace(comment))
+        {
+            MatchedComnCodes = [];
+            ComnCodeHint = SelectedColumn is null
+                ? "컬럼을 선택하면 그 주석과 이름이 같은 공통코드 그룹의 코드 목록을 보여줍니다."
+                : "선택한 컬럼에 주석(COMMENTS)이 없어 찾을 수 없습니다.";
+            return;
+        }
+
+        var groups = _comnCodeDataProvider.Groups;
+        if (groups.Count == 0)
+        {
+            MatchedComnCodes = [];
+            ComnCodeHint = "ComnCdInfo.json 을 불러오지 못했습니다. Settings 에서 경로를 확인해 주세요.";
+            return;
+        }
+
+        var keyword = comment.Trim();
+
+        // 1) 컬럼 주석과 그룹명이 정확히 일치하는 그룹.
+        var matchedGroups = groups
+            .Where(group => string.Equals(group.ComnGrpCdNm?.Trim(), keyword, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (matchedGroups.Count == 0)
+        {
+            MatchedComnCodes = [];
+            ComnCodeHint = $"\"{keyword}\" 와 이름이 같은 공통코드 그룹이 없습니다.";
+            return;
+        }
+
+        // 2) 그 그룹들에 묶여 있는 상세 코드.
+        var details = _comnCodeDataProvider.Details;
+        MatchedComnCodes = matchedGroups
+            .SelectMany(group => ComnCodeGroupMatch.DetailsOf(details, group))
+            .ToList();
+
+        var groupCodes = string.Join(", ", matchedGroups.Select(group => group.ComnGrpCd).Distinct());
+        ComnCodeHint = MatchedComnCodes.Count > 0
+            ? $"\"{keyword}\" -> 그룹 {groupCodes} 의 공통코드 {MatchedComnCodes.Count}건"
+            : $"\"{keyword}\" -> 그룹 {groupCodes} 을 찾았지만 묶여 있는 공통코드가 없습니다.";
     }
 
     private static bool Contains(string? source, string keyword) =>

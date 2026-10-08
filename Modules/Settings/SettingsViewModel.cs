@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelperManager.Common;
 using HelperManager.Modules;
+using HelperManager.Modules.ComnCode.Services;
 using HelperManager.Settings;
 using Microsoft.Win32;
 
@@ -34,13 +35,18 @@ public sealed partial class SettingsViewModel : ObservableObject
     // 추출이 끝나면 각 화면이 JSON 을 다시 읽도록 알려주는 통로.
     private readonly IJsonDataRefreshNotifier _refreshNotifier;
 
+    // 공통코드 파일 보관소. 추출 직후에는 들고 있던 내용이 낡은 것이므로 버리라고 알려줘야 한다.
+    private readonly IComnCodeDataProvider _comnCodeDataProvider;
+
     public SettingsViewModel(
         ISettingsService settingsService,
         IEnumerable<IFeatureModule> modules,
-        IJsonDataRefreshNotifier refreshNotifier)
+        IJsonDataRefreshNotifier refreshNotifier,
+        IComnCodeDataProvider comnCodeDataProvider)
     {
         _settingsService = settingsService;
         _refreshNotifier = refreshNotifier;
+        _comnCodeDataProvider = comnCodeDataProvider;
 
         // 기능키 콤보박스에 띄울 목록: 맨 앞에 "지정 안 함", 그 뒤로 등록된 메뉴 전부.
         AvailableMenuTitles = new[] { FunctionKeyBinding.NoneLabel }
@@ -403,6 +409,10 @@ public sealed partial class SettingsViewModel : ObservableObject
 
             // 각 화면에는 [새로고침] 버튼이 없으므로, 추출이 끝나면 여기서 다시 읽으라고 알린다.
             // 일부만 실패했더라도 성공한 파일은 새 내용이므로 어차피 다시 읽어야 한다.
+            // 보관소가 들고 있는 공통코드는 추출 전 내용이므로 먼저 버린다.
+            // (각 화면이 다시 읽을 때 새 파일에서 읽히도록, 알리기 전에 해야 한다)
+            _comnCodeDataProvider.Invalidate();
+
             StatusMessage = "화면 데이터를 다시 불러오는 중...";
             AppendExtractLog("열려 있는 화면의 데이터를 다시 불러옵니다...");
             _refreshNotifier.NotifyRefreshed();

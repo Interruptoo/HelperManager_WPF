@@ -53,10 +53,10 @@
                           HorizontalScrollBarVisibility="Auto"
                           >
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="TABLE_NAME" Binding="{Binding TableName}" Width="100" Visibility="Collapsed"/>
+                        <DataGridTextColumn Header="TABLE_NAME" Binding="{Binding TableName}" Width="100"/>
                         <DataGridTextColumn Header="COMN_GRP_CD" Binding="{Binding ComnGrpCd}" Width="120" />
                         <DataGridTextColumn Header="COMN_GRP_CD_NM" Binding="{Binding ComnGrpCdNm}" Width="*" MinWidth="150" />
-                        <DataGridTextColumn Header="COMN_GRP_CD_EXPL" Binding="{Binding ComnGrpCdExpl}" Width="2*" MinWidth="200" />
+                        <DataGridTextColumn Header="COMN_GRP_CD_EXPL" Binding="{Binding ComnGrpCdExpl}" Width="*" MinWidth="200" />
                         <DataGridTextColumn Header="HSP_TP_CD" Binding="{Binding HspTpCd}" Width="90" />
                     </DataGrid.Columns>
                 </DataGrid>
@@ -70,14 +70,14 @@
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           SelectionMode="Extended"
-                          SelectionUnit="FullRow"
+                          SelectionUnit="Cell"
                           >
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="TABLE_NAME" Binding="{Binding TableName}" Width="90" Visibility="Visible"/>
+                        <DataGridTextColumn Header="TABLE_NAME" Binding="{Binding TableName}" Width="90" Visibility="Collapsed"/>
                         <DataGridTextColumn Header="HSP_TP_CD" Binding="{Binding HspTpCd}" Width="90" Visibility="Collapsed"/>
                         <DataGridTextColumn Header="COMN_GRP_CD" Binding="{Binding ComnGrpCd}" Width="110" Visibility="Collapsed"/>
-                        <DataGridTextColumn Header="COMN_CD" Binding="{Binding ComnCd}" Width="80" />
-                        <DataGridTextColumn Header="COMN_CD_NM" Binding="{Binding ComnCdNm}" Width="150" />
+                        <DataGridTextColumn Header="COMN_CD" Binding="{Binding ComnCd}" Width="*" MinWidth="80"/>
+                        <DataGridTextColumn Header="COMN_CD_NM" Binding="{Binding ComnCdNm}" Width="*" MinWidth="180"/>
                         <DataGridTextColumn Header="COMN_CD_EXPL" Binding="{Binding ComnCdExpl}" Width="*" MinWidth="180" />
                         <DataGridTextColumn Header="SCRN_MRK_SEQ" Binding="{Binding ScrnMrkSeq}" Width="90" />
                         <DataGridTextColumn Header="USE_YN" Binding="{Binding UseYn}" Width="70" />

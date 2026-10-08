@@ -42,12 +42,13 @@
             </Grid>
         </Border>
 
-        <!-- ===================== 본문 ===================== -->
-        <Grid Grid.Row="1" Margin="0,10,0,10">
+        <!-- ===================== 본문 ===================== -->        <Grid Grid.Row="1" Margin="0,10,0,10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="300" />
+                <ColumnDefinition Width="*" MinWidth="260" />   <!-- 테이블 목록 -->
                 <ColumnDefinition Width="6" />
-                <ColumnDefinition Width="2*" MinWidth="450" />
+                <ColumnDefinition Width="2*" MinWidth="420" />  <!-- 컬럼 + 공통코드 -->
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="*" MinWidth="260" />   <!-- 인덱스 + 사용 오브젝트 -->
             </Grid.ColumnDefinitions>
 
             <!-- 좌측: 테이블 목록 (Owner / Table / Table Comments) -->
@@ -73,14 +74,12 @@
 
             <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent" />
 
-            <!-- 우측: 선택한 테이블의 컬럼 / 인덱스 / 사용 오브젝트 -->
+            <!-- 가운데: 선택한 테이블의 컬럼(위) + 선택한 컬럼의 공통코드(아래) -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="2*" MinHeight="120" /> <!-- 컬럼 -->
+                    <RowDefinition Height="2*" MinHeight="140" /> <!-- 컬럼 -->
                     <RowDefinition Height="6" />
-                    <RowDefinition Height="*" MinHeight="80" />   <!-- 인덱스 -->
-                    <RowDefinition Height="6" />
-                    <RowDefinition Height="*" MinHeight="80" />   <!-- 사용 오브젝트 -->
+                    <RowDefinition Height="*" MinHeight="90" />   <!-- 공통코드 -->
                 </Grid.RowDefinitions>
 
                 <!-- 컬럼 목록 (Column / data type / nullable / DEFAULT / Comment) -->
@@ -89,9 +88,10 @@
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource PanelHeaderStyle}" Text="Column Info" />
 
                         <DataGrid ItemsSource="{Binding Columns}"
+                                  SelectedItem="{Binding SelectedColumn}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
-                                  SelectionMode="Extended"
+                                  SelectionMode="Single"
                                   SelectionUnit="FullRow"
                                   HorizontalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
@@ -107,8 +107,52 @@
 
                 <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" />
 
-                <!-- 인덱스 목록 (Index name / column / comment) -->
+                <!--
+                    위에서 선택한 컬럼의 COMMENTS(예: "병원구분코드")로 ComnCdInfo 에서 COMN_GRP_CD 를
+                    찾고, 그 그룹에 묶여 있는 공통코드(ComnCdDetail)를 보여준다.
+                -->
                 <Border Grid.Row="2" Style="{StaticResource PanelBorderStyle}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource PanelHeaderStyle}" Text="Comn Code" />
+
+                        <TextBlock DockPanel.Dock="Top"
+                                   Text="{Binding ComnCodeHint}"
+                                   Foreground="Gray"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,6" />
+
+                        <DataGrid ItemsSource="{Binding MatchedComnCodes}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Extended"
+                                  SelectionUnit="FullRow"
+                                  HorizontalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="TABLE_NAME" Binding="{Binding TableName}" Width="100" />
+                                <DataGridTextColumn Header="COMN_GRP_CD" Binding="{Binding ComnGrpCd}" Width="110" />
+                                <DataGridTextColumn Header="COMN_CD" Binding="{Binding ComnCd}" Width="90" />
+                                <DataGridTextColumn Header="COMN_CD_NM" Binding="{Binding ComnCdNm}" Width="160" />
+                                <DataGridTextColumn Header="COMN_CD_EXPL" Binding="{Binding ComnCdExpl}" Width="*" MinWidth="150" />
+                                <DataGridTextColumn Header="USE_YN" Binding="{Binding UseYn}" Width="70" />
+                                <DataGridTextColumn Header="SCRN_MRK_SEQ" Binding="{Binding ScrnMrkSeq}" Width="90" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <GridSplitter Grid.Column="3" HorizontalAlignment="Stretch" Background="Transparent" />
+
+            <!-- 우측: 선택한 테이블의 인덱스(위) + 사용 오브젝트(아래) -->
+            <Grid Grid.Column="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="90" /> <!-- 인덱스 -->
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="*" MinHeight="90" /> <!-- 사용 오브젝트 -->
+                </Grid.RowDefinitions>
+
+                <!-- 인덱스 목록 (Index name / column / comment) -->
+                <Border Grid.Row="0" Style="{StaticResource PanelBorderStyle}">
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource PanelHeaderStyle}" Text="Index Info" />
 
@@ -119,18 +163,18 @@
                                   SelectionUnit="FullRow"
                                   HorizontalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="INDEX_NAME" Binding="{Binding IndexName}" Width="180" />
-                                <DataGridTextColumn Header="COLUMN" Binding="{Binding ColumnName}" Width="220" />
-                                <DataGridTextColumn Header="COMMENTS" Binding="{Binding Comments}" Width="*" MinWidth="150" />
+                                <DataGridTextColumn Header="INDEX_NAME" Binding="{Binding IndexName}" Width="160" />
+                                <DataGridTextColumn Header="COLUMN" Binding="{Binding ColumnName}" Width="150" />
+                                <DataGridTextColumn Header="COMMENTS" Binding="{Binding Comments}" Width="*" MinWidth="120" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>
                 </Border>
 
-                <GridSplitter Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" />
+                <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" />
 
                 <!-- 이 테이블을 사용 중인 오브젝트 (Owner / OBJ NAME / OBJ TYPE / STATUS) -->
-                <Border Grid.Row="4" Style="{StaticResource PanelBorderStyle}">
+                <Border Grid.Row="2" Style="{StaticResource PanelBorderStyle}">
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource PanelHeaderStyle}" Text="Use Object" />
 
@@ -143,7 +187,8 @@
                                    TextWrapping="Wrap"
                                    Margin="0,0,0,6"
                                    Visibility="{Binding IsObjectJoinUnavailable, Converter={StaticResource BoolToVisibilityConverter}}"
-                                   Text="이 파일에는 참조 대상 테이블 컬럼이 없어 선택한 테이블로 걸러낼 수 없습니다. 추출 쿼리에 a.referenced_name(트리거는 a.table_name)을 TABLE_NAME 으로 추가해 주세요." />
+                                    />
+                        <!--Text="이 파일에는 참조 대상 테이블 컬럼이 없어 선택한 테이블로 걸러낼 수 없습니다. 추출 쿼리에 a.referenced_name(트리거는 a.table_name)을 TABLE_NAME 으로 추가해 주세요."-->
 
                         <DataGrid ItemsSource="{Binding Objects}"
                                   AutoGenerateColumns="False"
@@ -153,8 +198,8 @@
                                   HorizontalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="OWNER" Binding="{Binding Owner}" Width="80" />
-                                <DataGridTextColumn Header="OBJ_NAME" Binding="{Binding ObjName}" Width="220" />
-                                <DataGridTextColumn Header="OBJ_TYPE" Binding="{Binding ObjType}" Width="120" />
+                                <DataGridTextColumn Header="OBJ_NAME" Binding="{Binding ObjName}" Width="180" />
+                                <DataGridTextColumn Header="OBJ_TYPE" Binding="{Binding ObjType}" Width="110" />
                                 <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="*" MinWidth="80" />
                             </DataGrid.Columns>
                         </DataGrid>
