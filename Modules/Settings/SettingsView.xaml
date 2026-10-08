@@ -17,6 +17,7 @@
             <RowDefinition Height="Auto" /> <!-- Common Code 자동 로드 JSON(2개) -->
             <RowDefinition Height="Auto" /> <!-- Table Info 자동 로드 JSON(4개) -->
             <RowDefinition Height="Auto" /> <!-- JSON 추출 (DB 접속 정보 + 실행) -->
+            <RowDefinition Height="Auto" /> <!-- F1~F12 기능키 단축키 -->
             <RowDefinition Height="*" />    <!-- 여백 -->
             <RowDefinition Height="Auto" /> <!-- 저장 버튼 + 상태 메시지 -->
         </Grid.RowDefinitions>
@@ -206,7 +207,7 @@
             DB 접속은 본체가 아니라 Extractor\HelperManager.Extractor.exe 가 하고,
             여기서는 그 프로그램을 띄워 출력만 받아 보여준다.
         -->
-        <Border Grid.Row="6" Style="{StaticResource PanelBorderStyle}">
+        <Border Grid.Row="6" Style="{StaticResource PanelBorderStyle}" Margin="0,0,0,16">
             <StackPanel>
                 <TextBlock Text="JSON 추출 - DB에서 위 JSON 파일들을 직접 뽑아오기" FontWeight="Bold" Margin="0,0,0,4" />
                 <TextBlock TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,8"
@@ -301,8 +302,51 @@
             </StackPanel>
         </Border>
 
+        <!--
+            기능키 단축키: F1~F12 에 메뉴를 하나씩 연결한다.
+            메뉴 순서를 따르지 않고 키마다 직접 지정하므로, 메뉴가 늘거나 순서가 바뀌어도
+            손에 익은 키는 그대로 유지된다.
+        -->
+        <Border Grid.Row="7" Style="{StaticResource PanelBorderStyle}">
+            <StackPanel>
+                <TextBlock Text="기능키 단축키 - F1~F12 로 메뉴 바로 이동" FontWeight="Bold" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,8"
+                           Text="키마다 이동할 메뉴를 직접 고릅니다. 비워둔 키는 아무 동작도 하지 않습니다. [저장] 후 바로 적용됩니다." />
+
+                <!-- 12줄을 3열로 늘어놓아 세로로 너무 길어지지 않게 한다. -->
+                <ItemsControl ItemsSource="{Binding FunctionKeyBindings}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="3" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,12,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="36" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding KeyName}"
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center" />
+
+                                <ComboBox Grid.Column="1"
+                                          SelectedItem="{Binding MenuTitle}"
+                                          ItemsSource="{Binding DataContext.AvailableMenuTitles,
+                                                                RelativeSource={RelativeSource AncestorType=ItemsControl}}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
         <!-- 저장 -->
-        <StackPanel Grid.Row="8" Orientation="Horizontal" Margin="0,16,0,0">
+        <StackPanel Grid.Row="9" Orientation="Horizontal" Margin="0,16,0,0">
             <Button Content="저장" Command="{Binding SaveCommand}" />
             <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" VerticalAlignment="Center" Margin="12,0,0,0" />
         </StackPanel>

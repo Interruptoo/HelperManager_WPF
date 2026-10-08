@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HelperManager.Modules;
 using HelperManager.Settings;
 using Microsoft.Win32;
 
@@ -29,9 +30,34 @@ public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsService _settingsService;
 
-    public SettingsViewModel(ISettingsService settingsService)
+    public SettingsViewModel(ISettingsService settingsService, IEnumerable<IFeatureModule> modules)
     {
         _settingsService = settingsService;
+
+        // 기능키 콤보박스에 띄울 목록: 맨 앞에 "지정 안 함", 그 뒤로 등록된 메뉴 전부.
+        AvailableMenuTitles = new[] { FunctionKeyBinding.NoneLabel }
+            .Concat(modules.Select(module => module.Title))
+            .ToList();
+
+        // F1~F12 는 메뉴 개수와 무관하게 항상 12줄을 보여준다. (지금 없는 메뉴도 나중에 생기면 바로 지정 가능)
+        var savedKeyMenus = settingsService.Current.FunctionKeyMenus;
+        FunctionKeyBindings = new ObservableCollection<FunctionKeyBinding>(
+            Enumerable.Range(1, 12).Select(number =>
+            {
+                var keyName = $"F{number}";
+                var savedTitle = savedKeyMenus.GetValueOrDefault(keyName);
+
+                return new FunctionKeyBinding
+                {
+                    KeyName = keyName,
+
+                    // 저장된 메뉴 이름이 지금 목록에 없으면(메뉴 이름이 바뀌었거나 빠진 경우)
+                    // 억지로 복원하지 않고 "지정 안 함" 으로 둔다.
+                    MenuTitle = savedTitle is not null && AvailableMenuTitles.Contains(savedTitle)
+                        ? savedTitle
+                        : FunctionKeyBinding.NoneLabel,
+                };
+            }));
 
         RequestLogViewerFolderPaths = new ObservableCollection<string>(settingsService.Current.RequestLogViewerFolderPaths);
         queryStoreXmlPath = settingsService.Current.QueryStoreXmlPath;
@@ -78,6 +104,12 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     /// <summary>앱 시작 시 탭으로 자동으로 열어줄 로그 폴더 목록.</summary>
     public ObservableCollection<string> RequestLogViewerFolderPaths { get; }
+
+    /// <summary>기능키 콤보박스에 띄울 선택지. 맨 앞은 "지정 안 함", 나머지는 등록된 메뉴 이름.</summary>
+    public IReadOnlyList<string> AvailableMenuTitles { get; }
+
+    /// <summary>F1~F12 열두 줄. 각 줄이 "이 키를 누르면 어떤 메뉴로 갈지"를 들고 있다.</summary>
+    public ObservableCollection<FunctionKeyBinding> FunctionKeyBindings { get; }
 
     /// <summary>앱 시작 시 자동으로 읽어줄 쿼리 모음 XML 파일 경로.</summary>
     [ObservableProperty]
@@ -400,6 +432,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             ColumnInfoJsonPath = string.IsNullOrWhiteSpace(ColumnInfoJsonPath) ? null : ColumnInfoJsonPath,
             IndexInfoJsonPath = string.IsNullOrWhiteSpace(IndexInfoJsonPath) ? null : IndexInfoJsonPath,
             TableUseObjectJsonPath = string.IsNullOrWhiteSpace(TableUseObjectJsonPath) ? null : TableUseObjectJsonPath,
+
+            // 지정한 키만 저장한다. 비워둔 키까지 담으면 설정 파일만 지저분해진다.
+            FunctionKeyMenus = FunctionKeyBindings
+                .Where(binding => binding.HasMenu)
+                .ToDictionary(binding => binding.KeyName, binding => binding.MenuTitle),
+
             Extract = new ExtractSettings
             {
                 Host = string.IsNullOrWhiteSpace(ExtractHost) ? null : ExtractHost.Trim(),

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelperManager.Modules;
+using HelperManager.Settings;
 
 namespace HelperManager.ViewModels;
 
@@ -17,6 +18,10 @@ public sealed partial class MainViewModel : ObservableObject
 {
     // 화면 전환 시 ViewModel 을 생성하기 위해 DI 컨테이너를 그대로 보관한다.
     private readonly IServiceProvider _services;
+
+    // 기능키(F1~F12) 매핑은 Settings 화면에서 저장하는 즉시 반영되어야 하므로, 생성자에서 한 번
+    // 읽어두지 않고 키를 누를 때마다 서비스에서 최신 설정을 꺼내 본다.
+    private readonly ISettingsService _settingsService;
 
     /// <summary>메인 메뉴에 표시될 전체 화면(모듈) 목록. Order 값 기준으로 정렬되어 있다.</summary>
     public IReadOnlyList<IFeatureModule> Modules { get; }
@@ -41,9 +46,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     public IRelayCommand ToggleMenuCommand { get; }
 
-    public MainViewModel(IServiceProvider services, IEnumerable<IFeatureModule> modules)
+    public MainViewModel(IServiceProvider services, IEnumerable<IFeatureModule> modules, ISettingsService settingsService)
     {
         _services = services;
+        _settingsService = settingsService;
 
         ToggleMenuCommand = new RelayCommand(() => IsMenuExpanded = !IsMenuExpanded);
 
@@ -62,5 +68,40 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnSelectedModuleChanged(IFeatureModule? value)
     {
         CurrentContent = value?.CreateViewModel(_services);
+    }
+
+    /// <summary>
+    /// 기능키(F1~F12)를 눌렀을 때, Settings 에 등록된 메뉴로 전환한다.
+    /// 메뉴 순서가 아니라 키마다 지정한 메뉴를 따르므로, 메뉴가 늘어나도 단축키는 그대로다.
+    /// </summary>
+    /// <param name="number">기능키 번호(1~12). F1 이면 1.</param>
+    /// <returns>
+    /// 해당 키에 연결된 메뉴로 실제로 전환했으면 true. 지정되지 않았거나 그 이름의 메뉴를
+    /// 찾지 못하면 false — 호출한 쪽에서 키 입력을 그대로 흘려보낼지 판단하는 데 쓴다.
+    /// </returns>
+    public bool SelectByFunctionKey(int number)
+    {
+        if (!_settingsService.Current.FunctionKeyMenus.TryGetValue($"F{number}", out var title))
+        {
+            return false;
+        }
+
+        var target = Modules.FirstOrDefault(module =>
+            string.Equals(module.Title, title, StringComparison.Ordinal));
+
+        if (target is null)
+        {
+            // 설정에 남아 있지만 지금은 없는 메뉴(이름이 바뀌었거나 제거된 경우).
+            return false;
+        }
+
+        // 이미 그 화면이면 다시 만들 필요가 없다. (SelectedModule 재대입은 ViewModel 을 새로 만든다)
+        if (ReferenceEquals(SelectedModule, target))
+        {
+            return true;
+        }
+
+        SelectedModule = target;
+        return true;
     }
 }

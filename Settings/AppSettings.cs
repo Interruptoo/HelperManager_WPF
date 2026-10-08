@@ -40,6 +40,15 @@ public sealed class AppSettings
     public string? TableUseObjectJsonPath { get; set; }
 
     /// <summary>
+    /// F1~F12 기능키에 어떤 메뉴를 연결할지. 키는 "F1".."F12", 값은 메뉴 이름
+    /// (<c>IFeatureModule.Title</c>, 예: "Table Info")이다.
+    ///
+    /// 메뉴 순서가 아니라 키마다 따로 지정하는 방식이라, 메뉴가 늘거나 순서가 바뀌어도
+    /// 손에 익은 단축키는 그대로 유지된다. 지정하지 않은 키는 목록에 담지 않는다.
+    /// </summary>
+    public Dictionary<string, string> FunctionKeyMenus { get; set; } = [];
+
+    /// <summary>
     /// 각 화면이 읽는 JSON 파일들을 DB 에서 직접 뽑아오는 추출 기능의 설정.
     /// 본체(HelperManager.exe)는 DB 에 붙지 않고, 별도의 HelperManager.Extractor.exe 가
     /// 이 설정을 읽어 추출한다. (Settings 화면의 [지금 추출] 버튼이 그 exe 를 실행한다)
