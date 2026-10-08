@@ -9,6 +9,8 @@ using HelperManager.Modules.QueryStore.Services;
 using HelperManager.Modules.RequestInfo;
 using HelperManager.Modules.RequestInfo.Services;
 using HelperManager.Modules.Settings;
+using HelperManager.Modules.TableInfo;
+using HelperManager.Modules.TableInfo.Services;
 using HelperManager.Settings;
 using HelperManager.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,6 +68,7 @@ public partial class App : Application
         services.AddSingleton<IQueryStoreParserService, QueryStoreParserService>();
         services.AddSingleton<IComnCodeParserService, ComnCodeParserService>();
         services.AddSingleton<IMenuInfoParserService, MenuInfoParserService>();
+        services.AddSingleton<ITableInfoParserService, TableInfoParserService>();
         services.AddSingleton<ISettingsService, SettingsService>();
 
         // ----- 메인 셸(Shell) -----
@@ -95,6 +98,12 @@ public partial class App : Application
         // MenuInfo: 정기적으로 추출되는 메뉴 정보 JSON을 DataGrid로 보여주는 화면
         services.AddSingleton<MenuInfoViewModel>();
         services.AddSingleton<IFeatureModule, MenuInfoModule>();
+
+        // Table Info: 테이블 목록(좌) + 선택한 테이블의 컬럼/인덱스/사용 오브젝트(우)를 보여주는 화면.
+        // 네 개의 JSON 파일을 한 번 읽어 조인용 Lookup 까지 만들어두므로, 메뉴를 옮겨도 다시 읽지
+        // 않도록 Singleton 으로 등록한다.
+        services.AddSingleton<TableInfoViewModel>();
+        services.AddSingleton<IFeatureModule, TableInfoModule>();
 
         // Settings: 자주 쓰는 로그 폴더/쿼리 XML/메뉴·공통코드 JSON 경로를 미리 등록해두는 화면
         services.AddSingleton<SettingsViewModel>();

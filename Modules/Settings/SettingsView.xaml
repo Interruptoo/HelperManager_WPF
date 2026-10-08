@@ -6,6 +6,8 @@
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="900">
 
+    <!-- 등록할 경로가 늘어나 화면보다 길어질 수 있으므로 전체를 세로 스크롤로 감싼다. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /> <!-- 제목 -->
@@ -13,6 +15,7 @@
             <RowDefinition Height="Auto" /> <!-- Query Store 자동 로드 XML -->
             <RowDefinition Height="Auto" /> <!-- MenuInfo 자동 로드 JSON -->
             <RowDefinition Height="Auto" /> <!-- Common Code 자동 로드 JSON(2개) -->
+            <RowDefinition Height="Auto" /> <!-- Table Info 자동 로드 JSON(4개) -->
             <RowDefinition Height="*" />    <!-- 여백 -->
             <RowDefinition Height="Auto" /> <!-- 저장 버튼 + 상태 메시지 -->
         </Grid.RowDefinitions>
@@ -105,7 +108,7 @@
         </Border>
 
         <!-- Common Code: 시작 시 자동으로 불러올 ComnCdInfo.json / ComnCdDetail.json -->
-        <Border Grid.Row="4" Style="{StaticResource PanelBorderStyle}">
+        <Border Grid.Row="4" Style="{StaticResource PanelBorderStyle}" Margin="0,0,0,16">
             <StackPanel>
                 <TextBlock Text="Common Code - 시작 시 자동으로 불러올 공통코드 JSON" FontWeight="Bold" Margin="0,0,0,8" />
 
@@ -149,10 +152,59 @@
             </StackPanel>
         </Border>
 
+        <!-- Table Info: 시작 시 자동으로 불러올 테이블/컬럼/인덱스/사용오브젝트 JSON 4개 -->
+        <Border Grid.Row="5" Style="{StaticResource PanelBorderStyle}">
+            <StackPanel>
+                <TextBlock Text="Table Info - 시작 시 자동으로 불러올 테이블 명세 JSON" FontWeight="Bold" Margin="0,0,0,4" />
+                <TextBlock Text="네 파일은 서로 독립적이라, 가지고 있는 것만 등록해도 그 목록만 채워집니다."
+                           Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="TableInfo :" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBox Grid.Row="0" Grid.Column="1" IsReadOnly="True" VerticalContentAlignment="Center"
+                             Text="{Binding TableInfoJsonPath, Mode=OneWay}" />
+                    <Button Grid.Row="0" Grid.Column="2" Content="파일 선택..." Command="{Binding BrowseTableInfoJsonCommand}" Margin="8,0,0,0" />
+                    <Button Grid.Row="0" Grid.Column="3" Content="지우기" Command="{Binding ClearTableInfoJsonCommand}" Margin="8,0,0,0" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="ColumnInfo :" VerticalAlignment="Center" Margin="0,8,6,0" />
+                    <TextBox Grid.Row="1" Grid.Column="1" IsReadOnly="True" VerticalContentAlignment="Center" Margin="0,8,0,0"
+                             Text="{Binding ColumnInfoJsonPath, Mode=OneWay}" />
+                    <Button Grid.Row="1" Grid.Column="2" Content="파일 선택..." Command="{Binding BrowseColumnInfoJsonCommand}" Margin="8,8,0,0" />
+                    <Button Grid.Row="1" Grid.Column="3" Content="지우기" Command="{Binding ClearColumnInfoJsonCommand}" Margin="8,8,0,0" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="IndexInfo :" VerticalAlignment="Center" Margin="0,8,6,0" />
+                    <TextBox Grid.Row="2" Grid.Column="1" IsReadOnly="True" VerticalContentAlignment="Center" Margin="0,8,0,0"
+                             Text="{Binding IndexInfoJsonPath, Mode=OneWay}" />
+                    <Button Grid.Row="2" Grid.Column="2" Content="파일 선택..." Command="{Binding BrowseIndexInfoJsonCommand}" Margin="8,8,0,0" />
+                    <Button Grid.Row="2" Grid.Column="3" Content="지우기" Command="{Binding ClearIndexInfoJsonCommand}" Margin="8,8,0,0" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="UseObject :" VerticalAlignment="Center" Margin="0,8,6,0" />
+                    <TextBox Grid.Row="3" Grid.Column="1" IsReadOnly="True" VerticalContentAlignment="Center" Margin="0,8,0,0"
+                             Text="{Binding TableUseObjectJsonPath, Mode=OneWay}" />
+                    <Button Grid.Row="3" Grid.Column="2" Content="파일 선택..." Command="{Binding BrowseTableUseObjectJsonCommand}" Margin="8,8,0,0" />
+                    <Button Grid.Row="3" Grid.Column="3" Content="지우기" Command="{Binding ClearTableUseObjectJsonCommand}" Margin="8,8,0,0" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
         <!-- 저장 -->
-        <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,16,0,0">
+        <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="0,16,0,0">
             <Button Content="저장" Command="{Binding SaveCommand}" />
             <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" VerticalAlignment="Center" Margin="12,0,0,0" />
         </StackPanel>
     </Grid>
+    </ScrollViewer>
 </UserControl>

@@ -23,4 +23,19 @@ public sealed class AppSettings
 
     /// <summary>프로그램을 시작할 때 Common Code 화면이 자동으로 읽어올 ComnCdDetail.json 파일 경로.</summary>
     public string? ComnCdDetailPath { get; set; }
+
+    /// <summary>프로그램을 시작할 때 Table Info 화면이 자동으로 읽어올 테이블 목록 JSON 파일 경로.</summary>
+    public string? TableInfoJsonPath { get; set; }
+
+    /// <summary>프로그램을 시작할 때 Table Info 화면이 자동으로 읽어올 컬럼 목록 JSON 파일 경로.</summary>
+    public string? ColumnInfoJsonPath { get; set; }
+
+    /// <summary>프로그램을 시작할 때 Table Info 화면이 자동으로 읽어올 인덱스 목록 JSON 파일 경로.</summary>
+    public string? IndexInfoJsonPath { get; set; }
+
+    /// <summary>
+    /// 프로그램을 시작할 때 Table Info 화면이 자동으로 읽어올, 테이블을 사용 중인 오브젝트 목록
+    /// JSON 파일 경로.
+    /// </summary>
+    public string? TableUseObjectJsonPath { get; set; }
 }

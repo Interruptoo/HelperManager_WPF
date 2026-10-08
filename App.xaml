@@ -5,6 +5,7 @@
              xmlns:queryStore="clr-namespace:HelperManager.Modules.QueryStore"
              xmlns:menuInfo="clr-namespace:HelperManager.Modules.MenuInfo"
              xmlns:comnCode="clr-namespace:HelperManager.Modules.ComnCode"
+             xmlns:tableInfo="clr-namespace:HelperManager.Modules.TableInfo"
              xmlns:settings="clr-namespace:HelperManager.Modules.Settings"
              xmlns:common="clr-namespace:HelperManager.Common">
     <Application.Resources>
@@ -44,6 +45,9 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type menuInfo:MenuInfoViewModel}">
                 <menuInfo:MenuInfoView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type tableInfo:TableInfoViewModel}">
+                <tableInfo:TableInfoView />
             </DataTemplate>
             <DataTemplate DataType="{x:Type settings:SettingsViewModel}">
                 <settings:SettingsView />
