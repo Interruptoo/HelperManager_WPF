@@ -16,82 +16,30 @@
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- 상단: 파일 경로(접기) + 검색 툴바 -->
+            <RowDefinition Height="Auto" /> <!-- 상단: 검색 툴바 -->
             <RowDefinition Height="*" />    <!-- 본문: 테이블(좌) + 컬럼/인덱스/오브젝트(우) -->
             <RowDefinition Height="Auto" /> <!-- 하단: 상태 메시지 -->
         </Grid.RowDefinitions>
 
-        <!-- ===================== 상단 툴바 ===================== -->
+        <!--
+            ===================== 상단 툴바: 검색 =====================
+            네 파일의 경로는 Settings 화면에 등록해두고 시작할 때 자동으로 읽으며, JSON 을 새로 받으면
+            추출 직후 알아서 다시 읽힌다. 그래서 [파일 열기]/[새로고침]과 경로 입력란은 두지 않는다.
+        -->
         <Border Grid.Row="0" Style="{StaticResource ToolbarBorderStyle}">
-            <StackPanel>
-                <!--
-                    파일이 네 개라 경로 줄이 길어지므로 평소에는 접어두고, 경로를 바꿀 때만 펼친다.
-                    (Settings 화면에 미리 등록해두면 시작할 때 자동으로 읽히므로 평소엔 열 일이 없다)
-                -->
-                <Expander Header="불러온 파일 경로 (TableInfo / ColumnInfo / IndexInfo / TableUseObjectList)"
-                          IsExpanded="False"
-                          Margin="0,0,0,8">
-                    <Grid Margin="0,8,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+            <!-- 검색 (OWNER / TABLE_NAME / TABLE_COMMENTS 중 하나라도 부분 일치) -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="TableInfo :" VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,8,0"
-                                 IsReadOnly="True" VerticalContentAlignment="Center"
-                                 Text="{Binding TableInfoFilePath, Mode=OneWay}"
-                                 ToolTip="테이블 목록(OWNER/TABLE_NAME/TABLE_COMMENTS) JSON 파일 경로입니다." />
-                        <Button Grid.Row="0" Grid.Column="2" Content="파일 열기..." Command="{Binding OpenTableInfoFileCommand}" />
+                <TextBlock Grid.Column="0" Text="검색 :" VerticalAlignment="Center" Margin="0,0,6,0" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="ColumnInfo :" VerticalAlignment="Center" Margin="0,8,6,0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" Margin="0,8,8,0"
-                                 IsReadOnly="True" VerticalContentAlignment="Center"
-                                 Text="{Binding ColumnInfoFilePath, Mode=OneWay}"
-                                 ToolTip="컬럼 목록 JSON 파일 경로입니다." />
-                        <Button Grid.Row="1" Grid.Column="2" Content="파일 열기..." Command="{Binding OpenColumnInfoFileCommand}" Margin="0,8,0,0" />
-
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="IndexInfo :" VerticalAlignment="Center" Margin="0,8,6,0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" Margin="0,8,8,0"
-                                 IsReadOnly="True" VerticalContentAlignment="Center"
-                                 Text="{Binding IndexInfoFilePath, Mode=OneWay}"
-                                 ToolTip="인덱스 목록 JSON 파일 경로입니다." />
-                        <Button Grid.Row="2" Grid.Column="2" Content="파일 열기..." Command="{Binding OpenIndexInfoFileCommand}" Margin="0,8,0,0" />
-
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="UseObject :" VerticalAlignment="Center" Margin="0,8,6,0" />
-                        <TextBox Grid.Row="3" Grid.Column="1" Margin="0,8,8,0"
-                                 IsReadOnly="True" VerticalContentAlignment="Center"
-                                 Text="{Binding TableObjectFilePath, Mode=OneWay}"
-                                 ToolTip="테이블을 사용 중인 오브젝트 목록 JSON 파일 경로입니다." />
-                        <Button Grid.Row="3" Grid.Column="2" Content="파일 열기..." Command="{Binding OpenTableObjectFileCommand}" Margin="0,8,0,0" />
-                    </Grid>
-                </Expander>
-
-                <!-- 검색 (OWNER / TABLE_NAME / TABLE_COMMENTS 중 하나라도 부분 일치) + 새로고침 -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Column="0" Text="검색 :" VerticalAlignment="Center" Margin="0,0,6,0" />
-
-                    <TextBox Grid.Column="1" Margin="0,0,8,0" VerticalContentAlignment="Center"
-                             Text="{Binding FilterKeyword, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="OWNER / TABLE_NAME / TABLE_COMMENTS 중 하나라도 포함되어 있으면 보여줍니다." />
-
-                    <Button Grid.Column="2" Content="새로고침" Command="{Binding RefreshCommand}"
-                            ToolTip="정기적으로 갱신되는 네 파일을 디스크에서 다시 읽어옵니다." />
-                </Grid>
-            </StackPanel>
+                <TextBox Grid.Column="1" VerticalContentAlignment="Center"
+                         Text="{Binding FilterKeyword, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="OWNER / TABLE_NAME / TABLE_COMMENTS 중 하나라도 포함되어 있으면 보여줍니다." />
+            </Grid>
         </Border>
 
         <!-- ===================== 본문 ===================== -->

@@ -1,4 +1,5 @@
 using System.Windows;
+using HelperManager.Common;
 using HelperManager.Modules;
 using HelperManager.Modules.ComnCode;
 using HelperManager.Modules.ComnCode.Services;
@@ -70,6 +71,9 @@ public partial class App : Application
         services.AddSingleton<IComnCodeParserService, ComnCodeParserService>();
         services.AddSingleton<IMenuInfoParserService, MenuInfoParserService>();
         services.AddSingleton<ISettingsService, SettingsService>();
+        // 추출이 끝났을 때 각 화면이 JSON 을 다시 읽도록 알려주는 통로.
+        // (각 화면에 [새로고침] 버튼을 두지 않기 때문에 필요하다)
+        services.AddSingleton<IJsonDataRefreshNotifier, JsonDataRefreshNotifier>();
 
         // ----- 메인 셸(Shell) -----
         services.AddSingleton<MainViewModel>();

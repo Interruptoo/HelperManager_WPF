@@ -1,3 +1,4 @@
+using HelperManager.Common;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -45,7 +46,7 @@ public sealed partial class TableInfoViewModel : ObservableObject
     /// </summary>
     private bool _objectsHaveOwner;
 
-    public TableInfoViewModel(ITableInfoParserService parserService, ISettingsService settingsService)
+    public TableInfoViewModel(ITableInfoParserService parserService, ISettingsService settingsService, IJsonDataRefreshNotifier refreshNotifier)
     {
         _parserService = parserService;
 
@@ -54,6 +55,9 @@ public sealed partial class TableInfoViewModel : ObservableObject
         OpenIndexInfoFileCommand = new RelayCommand(() => OpenFile("IndexInfo", path => IndexInfoFilePath = path));
         OpenTableObjectFileCommand = new RelayCommand(() => OpenFile("TableUseObjectList", path => TableObjectFilePath = path));
         RefreshCommand = new RelayCommand(Load, CanRefresh);
+
+        // Settings 화면에서 JSON 을 새로 추출하면 화면에 [새로고침] 버튼 없이도 알아서 다시 읽는다.
+        refreshNotifier.Refreshed += Load;
 
         var settings = settingsService.Current;
         tableInfoFilePath = settings.TableInfoJsonPath;

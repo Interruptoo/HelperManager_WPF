@@ -8,77 +8,29 @@
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- 상단: 파일 열기 + 검색 툴바 -->
+            <RowDefinition Height="Auto" /> <!-- 상단: 검색 툴바 -->
             <RowDefinition Height="*" />    <!-- 본문: Info(좌) + Detail(우) -->
             <RowDefinition Height="Auto" /> <!-- 하단: 상태 메시지 -->
         </Grid.RowDefinitions>
 
-        <!-- ===================== 상단 툴바: 파일 열기(2개) + 검색 ===================== -->
+        <!--
+            ===================== 상단 툴바: 검색 =====================
+            두 파일의 경로는 Settings 화면에 등록해두고 시작할 때 자동으로 읽으며, JSON 을 새로 받으면
+            추출 직후 알아서 다시 읽힌다. 그래서 [파일 열기]/[새로고침]과 경로 입력란은 두지 않는다.
+        -->
         <Border Grid.Row="0" Style="{StaticResource ToolbarBorderStyle}">
+            <!-- 검색 (Info 목록의 어느 필드든 부분 일치하면 보여준다) -->
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                <!-- 1행: ComnCdInfo.json -->
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="검색 :" VerticalAlignment="Center" Margin="0,0,6,0" />
 
-                    <TextBlock Grid.Column="0" Text="ComnCdInfo :" VerticalAlignment="Center" Margin="0,0,6,0" />
-
-                    <TextBox Grid.Column="1"
-                             Margin="0,0,8,0"
-                             IsReadOnly="True"
-                             VerticalContentAlignment="Center"
-                             Text="{Binding InfoFilePath, Mode=OneWay}"
-                             ToolTip="현재 불러온 ComnCdInfo.json 파일 경로입니다." />
-
-                    <Button Grid.Column="2" Content="파일 열기..." Command="{Binding OpenInfoFileCommand}" />
-                </Grid>
-
-                <!-- 2행: ComnCdDetail.json + 새로고침 -->
-                <Grid Grid.Row="1" Margin="0,8,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Column="0" Text="ComnCdDetail :" VerticalAlignment="Center" Margin="0,0,6,0" />
-
-                    <TextBox Grid.Column="1"
-                             Margin="0,0,8,0"
-                             IsReadOnly="True"
-                             VerticalContentAlignment="Center"
-                             Text="{Binding DetailFilePath, Mode=OneWay}"
-                             ToolTip="현재 불러온 ComnCdDetail.json 파일 경로입니다." />
-
-                    <Button Grid.Column="2" Content="파일 열기..." Command="{Binding OpenDetailFileCommand}" Margin="0,0,8,0" />
-
-                    <Button Grid.Column="3" Content="새로고침" Command="{Binding RefreshCommand}"
-                            ToolTip="정기적으로 갱신되는 두 파일을 디스크에서 다시 읽어옵니다." />
-                </Grid>
-
-                <!-- 3행: 검색 (Info 목록의 어느 필드든 부분 일치하면 보여준다) -->
-                <Grid Grid.Row="2" Margin="0,8,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Column="0" Text="검색 :" VerticalAlignment="Center" Margin="0,0,6,0" />
-
-                    <TextBox Grid.Column="1" VerticalContentAlignment="Center"
-                             Text="{Binding FilterKeyword, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="입력한 값이 왼쪽 목록의 어느 필드에든 포함되어 있으면 보여줍니다." />
-                </Grid>
+                <TextBox Grid.Column="1" VerticalContentAlignment="Center"
+                         Text="{Binding FilterKeyword, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="입력한 값이 왼쪽 목록의 어느 필드에든 포함되어 있으면 보여줍니다." />
             </Grid>
         </Border>
 

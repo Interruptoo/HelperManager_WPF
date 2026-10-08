@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HelperManager.Common;
 using HelperManager.Modules;
 using HelperManager.Settings;
 using Microsoft.Win32;
@@ -30,9 +31,16 @@ public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsService _settingsService;
 
-    public SettingsViewModel(ISettingsService settingsService, IEnumerable<IFeatureModule> modules)
+    // 추출이 끝나면 각 화면이 JSON 을 다시 읽도록 알려주는 통로.
+    private readonly IJsonDataRefreshNotifier _refreshNotifier;
+
+    public SettingsViewModel(
+        ISettingsService settingsService,
+        IEnumerable<IFeatureModule> modules,
+        IJsonDataRefreshNotifier refreshNotifier)
     {
         _settingsService = settingsService;
+        _refreshNotifier = refreshNotifier;
 
         // 기능키 콤보박스에 띄울 목록: 맨 앞에 "지정 안 함", 그 뒤로 등록된 메뉴 전부.
         AvailableMenuTitles = new[] { FunctionKeyBinding.NoneLabel }
@@ -392,6 +400,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             process.BeginErrorReadLine();
 
             await process.WaitForExitAsync();
+
+            // 각 화면에는 [새로고침] 버튼이 없으므로, 추출이 끝나면 여기서 다시 읽으라고 알린다.
+            // 일부만 실패했더라도 성공한 파일은 새 내용이므로 어차피 다시 읽어야 한다.
+            StatusMessage = "화면 데이터를 다시 불러오는 중...";
+            AppendExtractLog("열려 있는 화면의 데이터를 다시 불러옵니다...");
+            _refreshNotifier.NotifyRefreshed();
 
             StatusMessage = process.ExitCode == 0
                 ? "추출이 끝났습니다."

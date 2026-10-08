@@ -42,6 +42,15 @@ public sealed partial class QueryStoreViewModel : ObservableObject
         _parserService = parserService;
 
         OpenFileCommand = new RelayCommand(OpenFile);
+        RefreshCommand = new RelayCommand(Refresh, () => !string.IsNullOrWhiteSpace(LoadedFilePath));
+
+        // 탭 우클릭 메뉴용. 탭이 하나도 없거나 하나뿐이면 의미 없는 항목은 비활성화되도록
+        // OpenTabs 가 바뀔 때마다 실행 가능 여부를 다시 알린다.
+        CloseTabCommand = new RelayCommand<QueryTabViewModel>(CloseTab, tab => tab is not null);
+        CloseOtherTabsCommand = new RelayCommand<QueryTabViewModel>(CloseOtherTabs, _ => OpenTabs.Count > 1);
+        CloseAllTabsCommand = new RelayCommand(CloseAllTabs, () => OpenTabs.Count > 0);
+        OpenTabs.CollectionChanged += (_, _) => NotifyTabCommandsChanged();
+
         SearchCommand = new RelayCommand(SearchNext, () => !string.IsNullOrWhiteSpace(SearchKeyword) && RootNodes.Count > 0);
 
         // Settings 화면에 미리 등록해둔 XML 경로가 있으면, 매번 파일 찾기 대화상자를 열 필요 없이
@@ -94,7 +103,24 @@ public sealed partial class QueryStoreViewModel : ObservableObject
 
     public IRelayCommand OpenFileCommand { get; }
 
+    /// <summary>
+    /// 지금 보고 있는 XML 을 디스크에서 다시 읽는다.
+    ///
+    /// 다른 화면들이 보는 JSON 과 달리 쿼리 모음 XML 은 EQS 에서 따로 받아오는 파일이라,
+    /// Settings 의 [지금 추출]로는 갱신되지 않는다. 그래서 이 화면에만 [새로고침]을 남겨둔다.
+    /// </summary>
+    public IRelayCommand RefreshCommand { get; }
+
     public IRelayCommand SearchCommand { get; }
+
+    /// <summary>탭 우클릭 메뉴의 [닫기]. 우클릭한 탭 하나만 닫는다.</summary>
+    public IRelayCommand<QueryTabViewModel> CloseTabCommand { get; }
+
+    /// <summary>탭 우클릭 메뉴의 [다른 탭 모두 닫기]. 우클릭한 탭만 남기고 전부 닫는다.</summary>
+    public IRelayCommand<QueryTabViewModel> CloseOtherTabsCommand { get; }
+
+    /// <summary>탭 우클릭 메뉴의 [모두 닫기].</summary>
+    public IRelayCommand CloseAllTabsCommand { get; }
 
     partial void OnSearchKeywordChanged(string value)
     {
@@ -131,8 +157,21 @@ public sealed partial class QueryStoreViewModel : ObservableObject
     }
 
     /// <summary>
+    /// 지금 불러와 있는 XML 을 디스크에서 다시 읽는다. (EQS 에서 파일을 새로 받았을 때)
+    /// 파일 내용이 바뀌었을 수 있으므로 열려 있던 쿼리 탭은 모두 닫고 트리를 새로 만든다.
+    /// </summary>
+    private void Refresh()
+    {
+        if (!string.IsNullOrWhiteSpace(LoadedFilePath))
+        {
+            LoadFile(LoadedFilePath);
+        }
+    }
+
+    /// <summary>
     /// 지정한 XML 파일을 대화상자 없이 바로 읽어 트리를 구성한다. Settings 화면에 미리 등록해둔
-    /// 경로를 앱 시작 시 자동으로 불러올 때, 그리고 [파일 열기] 대화상자에서 고른 직후에도 쓰인다.
+    /// 경로를 앱 시작 시 자동으로 불러올 때, [새로고침], 그리고 [파일 열기] 대화상자에서 고른
+    /// 직후에도 쓰인다.
     /// </summary>
     private void LoadFile(string filePath)
     {
@@ -145,19 +184,15 @@ public sealed partial class QueryStoreViewModel : ObservableObject
         SearchKeyword = string.Empty;
         ResetSearchState();
 
-        // 새 파일을 열면 이전 파일 기준으로 열려 있던 탭은 더 이상 의미가 없으므로 모두 닫는다.
-        foreach (var tab in OpenTabs)
-        {
-            tab.CloseRequested -= OnTabCloseRequested;
-        }
-        OpenTabs.Clear();
-        SelectedTab = null;
+        // 새 파일을 열면(새로고침 포함) 이전 파일 기준으로 열려 있던 탭은 더 이상 의미가 없으므로 모두 닫는다.
+        CloseAllTabs();
 
         StatusMessage = queries.Count == 0
             ? "이 파일에서 <sql id=\"...\"> 형식의 쿼리를 찾지 못했습니다."
             : $"{queries.Count}개의 쿼리를 불러왔습니다.";
 
         SearchCommand.NotifyCanExecuteChanged();
+        RefreshCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>
@@ -300,5 +335,52 @@ public sealed partial class QueryStoreViewModel : ObservableObject
         }
 
         SelectedTab = OpenTabs.Count == 0 ? null : OpenTabs[Math.Min(closedIndex, OpenTabs.Count - 1)];
+    }
+
+    /// <summary>탭 우클릭 메뉴의 [닫기]. ✕ 버튼을 눌렀을 때와 똑같이 처리한다.</summary>
+    private void CloseTab(QueryTabViewModel? tab)
+    {
+        if (tab is not null)
+        {
+            OnTabCloseRequested(tab, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>탭 우클릭 메뉴의 [다른 탭 모두 닫기]. 기준 탭만 남기고 전부 닫는다.</summary>
+    private void CloseOtherTabs(QueryTabViewModel? keep)
+    {
+        if (keep is null)
+        {
+            return;
+        }
+
+        // 순회 도중 목록이 바뀌므로 먼저 대상을 확정해둔다.
+        foreach (var tab in OpenTabs.Where(tab => !ReferenceEquals(tab, keep)).ToList())
+        {
+            tab.CloseRequested -= OnTabCloseRequested;
+            OpenTabs.Remove(tab);
+        }
+
+        SelectedTab = keep;
+    }
+
+    /// <summary>열려 있는 탭을 전부 닫는다. 우클릭 메뉴의 [모두 닫기]와 파일을 새로 읽을 때 쓰인다.</summary>
+    private void CloseAllTabs()
+    {
+        foreach (var tab in OpenTabs)
+        {
+            tab.CloseRequested -= OnTabCloseRequested;
+        }
+
+        OpenTabs.Clear();
+        SelectedTab = null;
+    }
+
+    /// <summary>탭 개수에 따라 달라지는 우클릭 메뉴 항목들의 활성/비활성 상태를 갱신한다.</summary>
+    private void NotifyTabCommandsChanged()
+    {
+        CloseTabCommand.NotifyCanExecuteChanged();
+        CloseOtherTabsCommand.NotifyCanExecuteChanged();
+        CloseAllTabsCommand.NotifyCanExecuteChanged();
     }
 }

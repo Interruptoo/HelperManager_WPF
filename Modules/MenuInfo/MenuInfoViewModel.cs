@@ -1,3 +1,4 @@
+using HelperManager.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelperManager.Modules.MenuInfo.Models;
@@ -25,12 +26,15 @@ public sealed partial class MenuInfoViewModel : ObservableObject
 {
     private readonly IMenuInfoParserService _parserService;
 
-    public MenuInfoViewModel(IMenuInfoParserService parserService, ISettingsService settingsService)
+    public MenuInfoViewModel(IMenuInfoParserService parserService, ISettingsService settingsService, IJsonDataRefreshNotifier refreshNotifier)
     {
         _parserService = parserService;
 
         OpenFileCommand = new RelayCommand(OpenFile);
         RefreshCommand = new RelayCommand(Refresh, () => !string.IsNullOrWhiteSpace(LoadedFilePath));
+
+        // Settings 화면에서 JSON 을 새로 추출하면 화면에 [새로고침] 버튼 없이도 알아서 다시 읽는다.
+        refreshNotifier.Refreshed += Refresh;
 
         var savedJsonPath = settingsService.Current.MenuInfoJsonPath;
         if (!string.IsNullOrWhiteSpace(savedJsonPath) && File.Exists(savedJsonPath))
