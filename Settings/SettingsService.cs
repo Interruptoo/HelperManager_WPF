@@ -24,6 +24,8 @@ public sealed class SettingsService : ISettingsService
 
     public AppSettings Current { get; private set; }
 
+    public string FilePath => _filePath;
+
     public void Save(AppSettings settings)
     {
         var json = JsonSerializer.Serialize(settings, SerializerOptions);

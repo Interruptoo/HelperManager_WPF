@@ -10,6 +10,12 @@ public interface ISettingsService
     /// <summary>현재 메모리에 올라와 있는 설정. 앱 시작 시 파일에서 한 번 읽어 캐시해둔다.</summary>
     AppSettings Current { get; }
 
+    /// <summary>
+    /// 설정 파일(settings.json)의 실제 경로. JSON 추출기(HelperManager.Extractor.exe)를 띄울 때
+    /// "이 설정 파일을 읽어라"고 넘겨주기 위해 필요하다.
+    /// </summary>
+    string FilePath { get; }
+
     /// <summary>설정을 파일에 저장하고, Current 를 갱신한다.</summary>
     void Save(AppSettings settings);
 }

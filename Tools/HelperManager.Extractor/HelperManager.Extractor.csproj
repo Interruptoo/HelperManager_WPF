@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>HelperManager.Extractor</RootNamespace>
+    <AssemblyName>HelperManager.Extractor</AssemblyName>
+    <!-- 콘솔 출력에 한글이 깨지지 않도록 UTF-8 로 고정한다. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Oracle 완전 관리형 드라이버. Oracle Client / Instant Client 를 따로 깔지 않아도 되므로
+      이 exe 하나만 복사하면 어느 PC 에서나 추출이 돈다.
+    -->
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.301" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      설정 파일(settings.json) 모양은 본체(HelperManager)와 똑같아야 하므로, 복사해서 따로
+      관리하지 않고 원본 소스를 링크해서 같이 컴파일한다. 본체 프로젝트를 참조하면 WPF 전체가
+      딸려오기 때문에 파일 링크 방식을 쓴다.
+    -->
+    <Compile Include="..\..\Settings\AppSettings.cs" Link="Settings\AppSettings.cs" />
+
+    <!-- 작업 스케줄러에서 돌릴 때 쓰는 배치 파일도 출력 폴더에 같이 복사한다. -->
+    <None Include="extract.bat" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

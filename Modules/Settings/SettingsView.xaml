@@ -16,6 +16,7 @@
             <RowDefinition Height="Auto" /> <!-- MenuInfo 자동 로드 JSON -->
             <RowDefinition Height="Auto" /> <!-- Common Code 자동 로드 JSON(2개) -->
             <RowDefinition Height="Auto" /> <!-- Table Info 자동 로드 JSON(4개) -->
+            <RowDefinition Height="Auto" /> <!-- JSON 추출 (DB 접속 정보 + 실행) -->
             <RowDefinition Height="*" />    <!-- 여백 -->
             <RowDefinition Height="Auto" /> <!-- 저장 버튼 + 상태 메시지 -->
         </Grid.RowDefinitions>
@@ -153,7 +154,7 @@
         </Border>
 
         <!-- Table Info: 시작 시 자동으로 불러올 테이블/컬럼/인덱스/사용오브젝트 JSON 4개 -->
-        <Border Grid.Row="5" Style="{StaticResource PanelBorderStyle}">
+        <Border Grid.Row="5" Style="{StaticResource PanelBorderStyle}" Margin="0,0,0,16">
             <StackPanel>
                 <TextBlock Text="Table Info - 시작 시 자동으로 불러올 테이블 명세 JSON" FontWeight="Bold" Margin="0,0,0,4" />
                 <TextBlock Text="네 파일은 서로 독립적이라, 가지고 있는 것만 등록해도 그 목록만 채워집니다."
@@ -200,8 +201,108 @@
             </StackPanel>
         </Border>
 
+        <!--
+            JSON 추출: 위 화면들이 읽는 JSON 파일을 DB 에서 직접 다시 뽑는다.
+            DB 접속은 본체가 아니라 Extractor\HelperManager.Extractor.exe 가 하고,
+            여기서는 그 프로그램을 띄워 출력만 받아 보여준다.
+        -->
+        <Border Grid.Row="6" Style="{StaticResource PanelBorderStyle}">
+            <StackPanel>
+                <TextBlock Text="JSON 추출 - DB에서 위 JSON 파일들을 직접 뽑아오기" FontWeight="Bold" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,8"
+                           Text="본체는 DB에 접속하지 않습니다. [지금 추출]을 누르면 Extractor 폴더의 별도 프로그램이 실행되어 QUERIES.json 의 쿼리를 돌리고 결과를 JSON 파일로 저장합니다. 비밀번호는 settings.json 에 평문으로 저장됩니다." />
+
+                <!-- 접속 정보 -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="70" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Host :" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBox Grid.Row="0" Grid.Column="1" VerticalContentAlignment="Center"
+                             Text="{Binding ExtractHost, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Port :" VerticalAlignment="Center" Margin="12,0,6,0" />
+                    <TextBox Grid.Row="0" Grid.Column="3" VerticalContentAlignment="Center"
+                             Text="{Binding ExtractPort, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Row="0" Grid.Column="4" Text="Service :" VerticalAlignment="Center" Margin="12,0,6,0" />
+                    <TextBox Grid.Row="0" Grid.Column="5" VerticalContentAlignment="Center"
+                             Text="{Binding ExtractServiceName, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="User :" VerticalAlignment="Center" Margin="0,8,6,0" />
+                    <TextBox Grid.Row="1" Grid.Column="1" VerticalContentAlignment="Center" Margin="0,8,0,0"
+                             Text="{Binding ExtractUserId, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="4" Text="Password :" VerticalAlignment="Center" Margin="12,8,6,0" />
+                    <!--
+                        PasswordBox 는 보안상 Password 속성에 바인딩을 지원하지 않아서, 코드비하인드에서
+                        ViewModel 과 값을 주고받는다. (SettingsView.xaml.cs 참고)
+                    -->
+                    <PasswordBox x:Name="ExtractPasswordBox" Grid.Row="1" Grid.Column="5"
+                                 VerticalContentAlignment="Center" Margin="0,8,0,0"
+                                 PasswordChanged="ExtractPasswordBox_PasswordChanged" />
+                </Grid>
+
+                <!-- 쿼리 모음 파일 -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="QUERIES.json :" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBox Grid.Column="1" IsReadOnly="True" VerticalContentAlignment="Center"
+                             Text="{Binding ExtractQueriesJsonPath, Mode=OneWay}" />
+                    <Button Grid.Column="2" Content="파일 선택..." Command="{Binding BrowseExtractQueriesJsonCommand}" Margin="8,0,0,0" />
+                </Grid>
+
+                <!-- 출력 폴더 -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="저장 폴더 :" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBox Grid.Column="1" IsReadOnly="True" VerticalContentAlignment="Center"
+                             Text="{Binding ExtractOutputFolder, Mode=OneWay}"
+                             ToolTip="비워두면 QUERIES.json 이 있는 폴더에 저장합니다." />
+                    <Button Grid.Column="2" Content="폴더 선택..." Command="{Binding BrowseExtractOutputFolderCommand}" Margin="8,0,0,0" />
+                </Grid>
+
+                <!-- 실행 -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="지금 추출" Command="{Binding RunExtractCommand}" />
+                    <TextBlock Text="추출 중입니다. 데이터 양에 따라 몇 분 걸릴 수 있습니다."
+                               Foreground="Gray" VerticalAlignment="Center" Margin="12,0,0,0"
+                               Visibility="{Binding IsExtracting, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </StackPanel>
+
+                <!-- 추출기 출력 로그 -->
+                <TextBox Height="160"
+                         IsReadOnly="True"
+                         FontFamily="Consolas"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         TextWrapping="NoWrap"
+                         Text="{Binding ExtractLog, Mode=OneWay}" />
+            </StackPanel>
+        </Border>
+
         <!-- 저장 -->
-        <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="0,16,0,0">
+        <StackPanel Grid.Row="8" Orientation="Horizontal" Margin="0,16,0,0">
             <Button Content="저장" Command="{Binding SaveCommand}" />
             <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" VerticalAlignment="Center" Margin="12,0,0,0" />
         </StackPanel>

@@ -13,6 +13,30 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      JSON 추출기(별도 콘솔 프로그램). 본체가 DB 에 붙지 않는다는 기획을 지키기 위해 Oracle
+      드라이버는 추출기 쪽에만 들어간다. ReferenceOutputAssembly="false" 이므로 본체는 추출기를
+      코드로 참조하지 않고, "본체를 빌드하면 추출기도 같이 빌드되게" 하는 용도로만 참조한다.
+      (실행은 Settings 화면에서 프로세스로 띄운다)
+    -->
+    <ProjectReference Include="Tools\HelperManager.Extractor\HelperManager.Extractor.csproj"
+                      ReferenceOutputAssembly="false"
+                      Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Tools\ 아래의 보조 프로그램(추출기)은 별도 프로젝트다. 본체 프로젝트가 하위 폴더의 .cs 를
+      전부 자동으로 끌어가는(기본 glob) 바람에 추출기 소스와 obj 까지 같이 컴파일되므로 제외한다.
+    -->
+    <Compile Remove="Tools\**" />
+    <None Remove="Tools\**" />
+    <Page Remove="Tools\**" />
+    <Resource Remove="Tools\**" />
+    <EmbeddedResource Remove="Tools\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- MVVM 보일러플레이트(ObservableObject, RelayCommand 등)를 소스 제너레이터로 자동 생성 -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <!-- 화면(모듈)을 DI 컨테이너에 등록해 느슨하게 결합하기 위함 -->
@@ -26,5 +50,28 @@
     -->
     <Resource Include="Images\Logo.png" />
   </ItemGroup>
+
+  <!--
+    빌드한 추출기를 본체 출력 폴더의 Extractor\ 하위로 복사한다.
+    (ProjectReference 는 빌드 순서만 잡아줄 뿐 출력물을 가져오지는 않으므로 직접 복사한다)
+
+    하위 폴더에 따로 두는 이유는 Oracle 드라이버 DLL 들이 본체 폴더에 섞이지 않게 하기 위함이다.
+    배포에서 빼고 싶으면 Extractor\ 폴더만 지우면 되고, 본체는 추출기가 없어도 그대로 동작한다.
+
+    Condition: WPF 프로젝트는 마크업 컴파일 과정에서 "<프로젝트명>_xxxx_wpftmp.csproj" 라는 임시
+    프로젝트를 만들어 한 번 더 빌드한다. 그때까지 복사가 돌 필요는 없으므로 본 프로젝트에서만 돈다.
+  -->
+  <Target Name="CopyExtractorOutput"
+          AfterTargets="Build"
+          Condition="'$(MSBuildProjectName)' == 'HelperManager'">
+
+    <ItemGroup>
+      <ExtractorOutput Include="$(MSBuildThisFileDirectory)Tools\HelperManager.Extractor\bin\$(Configuration)\net10.0\**\*.*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(ExtractorOutput)"
+          DestinationFolder="$(OutDir)Extractor\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>
