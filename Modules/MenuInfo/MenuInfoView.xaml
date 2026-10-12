@@ -41,8 +41,8 @@
             <DataGrid ItemsSource="{Binding FilteredEntries}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
-                      SelectionMode="Single"
-                      SelectionUnit="FullRow">
+                      SelectionMode="Extended"
+                      SelectionUnit="Cell">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="USE_YN" Binding="{Binding UseYn}" Width="70" />
                     <DataGridTextColumn Header="DISP_YN" Binding="{Binding DispYn}" Width="70" />
