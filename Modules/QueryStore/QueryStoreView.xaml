@@ -44,6 +44,7 @@
                     <TextBlock Grid.Column="0" Text="검색 :" VerticalAlignment="Center" Margin="0,0,6,0" />
 
                     <TextBox Grid.Column="1" VerticalContentAlignment="Center"
+                             common:FocusOnLoadBehavior.IsEnabled="True"
                              Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="Enter 또는 [검색]을 누르면 선택된 대상(쿼리 id / 쿼리 내용)에서 찾습니다.">
                         <TextBox.InputBindings>

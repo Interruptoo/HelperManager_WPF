@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:common="clr-namespace:HelperManager.Common"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1200">
@@ -31,6 +32,7 @@
                            VerticalAlignment="Center"
                            Margin="0,0,6,0" />
                 <TextBox Grid.Column="1" VerticalContentAlignment="Center"
+                         common:FocusOnLoadBehavior.IsEnabled="True"
                          Text="{Binding FilterKeyword, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="입력한 값이 MENU_NM, MENU_CD, APP_URL 중 하나라도 포함되어 있으면 보여줍니다." />
             </Grid>
